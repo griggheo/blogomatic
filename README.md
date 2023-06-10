@@ -15,12 +15,6 @@ Create React frontend:
 $ mkdir web; cd web
 $ npx create-react-app blog
 # edit blog/src/App.js
-```
-
-Install Material UI:
-
-```
-$ cd web
-$ npm install @mui/material @emotion/react @emotion/styled
+# edit blog/src/App.css
 ```
 

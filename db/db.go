@@ -13,9 +13,6 @@ func InitializeDB(dbType, dbConnectionString string) (*sql.DB, error) {
 
 	switch dbType {
 	case "postgres":
-		if dbConnectionString == "" {
-			dbConnectionString = "user=postgres dbname=blog sslmode=disable" // Default value
-		}
 		db, err = sql.Open("postgres", dbConnectionString)
 		if err != nil {
 			return nil, err
@@ -30,9 +27,6 @@ func InitializeDB(dbType, dbConnectionString string) (*sql.DB, error) {
 			return nil, err
 		}
 	default:
-		if dbConnectionString == "" {
-			dbConnectionString = "./blogomatic.db" // Default value
-		}
 		db, err = sql.Open("sqlite3", dbConnectionString)
 		if err != nil {
 			return nil, err

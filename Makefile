@@ -13,4 +13,7 @@ clean:
 run: app
 	./bin/blogomatic
 
+test: 
+	go test -v ./...
+
 all: clean app
