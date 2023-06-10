@@ -1,0 +1,94 @@
+import React, { useState, useEffect } from 'react';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Container from '@mui/material/Container';
+import './App.css';
+
+function App() {
+  const [posts, setPosts] = useState([]);
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    const response = await fetch('http://localhost:8080/posts');
+    const data = await response.json();
+    setPosts(data);
+  };
+
+  const createPost = async () => {
+    const response = await fetch('http://localhost:8080/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newPostTitle, content: newPostContent }),
+    });
+    if (response.ok) {
+      setNewPostTitle('');
+      setNewPostContent('');
+      fetchPosts();
+    }
+  };
+
+  return (
+    <Container maxWidth="sm">
+      <Box mt={4}>
+        <Typography variant="h4" component="h1" align="center" gutterBottom>
+          Blog
+        </Typography>
+        <Box mt={4}>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Create new post
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Title"
+                variant="outlined"
+                fullWidth
+                value={newPostTitle}
+                onChange={(e) => setNewPostTitle(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Content"
+                variant="outlined"
+                multiline
+                rows={4}
+                fullWidth
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="contained" color="primary" onClick={createPost}>
+                Create
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+        <Box mt={4}>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Posts
+          </Typography>
+          {posts.map((post) => (
+            <Box key={post.id} mt={2} p={2} border={1}>
+              <Typography variant="h6" component="h3">
+                {post.title}
+              </Typography>
+              <Typography>{post.content}</Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Container>
+  );
+}
+
+export default App;
