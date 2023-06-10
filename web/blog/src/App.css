@@ -37,6 +37,15 @@ button:hover {
   background-color: #45a049;
 }
 
+.button-group {
+  display: flex;
+  align-items: center;
+}
+
+.button-space {
+  margin-right: 10px; /* Adjust the value as per your preference */
+}
+
 .posts {
   margin-top: 20px;
 }

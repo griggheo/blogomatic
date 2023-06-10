@@ -13,11 +13,26 @@ type Post struct {
 	Date    string `json:"date"`
 }
 
-type PostHandler struct {
-	db *sql.DB
+type DBInterface interface {
+	Prepare(query string) (*sql.Stmt, error)
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Close() error
 }
 
-func NewPostHandler(db *sql.DB) *PostHandler {
+type PostHandler struct {
+	//db *sql.DB
+	db DBInterface
+}
+
+// func NewPostHandler(db *sql.DB) *PostHandler {
+// 	return &PostHandler{
+// 		db: db,
+// 	}
+// }
+
+func NewPostHandler(db DBInterface) *PostHandler {
 	return &PostHandler{
 		db: db,
 	}
@@ -46,6 +61,43 @@ func (ph *PostHandler) CreatePost(c echo.Context) error {
 
 	post.ID = int(id)
 	return c.JSON(http.StatusCreated, post)
+}
+
+func (ph *PostHandler) EditPost(c echo.Context) error {
+	id := c.Param("id")
+
+	post := Post{}
+	if err := c.Bind(&post); err != nil {
+		return err
+	}
+
+	stmt, err := ph.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(post.Title, post.Content, id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (ph *PostHandler) DeletePost(c echo.Context) error {
+	id := c.Param("id")
+
+	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (ph *PostHandler) GetPosts(c echo.Context) error {

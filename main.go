@@ -31,6 +31,8 @@ func main() {
 	postHandler := post.NewPostHandler(db)
 
 	e.POST("/posts", postHandler.CreatePost)
+	e.PUT("/posts/:id", postHandler.EditPost)
+	e.DELETE("/posts/:id", postHandler.DeletePost)
 	e.GET("/posts", postHandler.GetPosts)
 
 	e.GET("/*", func(c echo.Context) error {
