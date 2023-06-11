@@ -14,14 +14,22 @@ import (
 )
 
 func loadConfig() {
+	// Set default values for the configuration variables
+	viper.SetDefault("db.type", "sqlite")
+	viper.SetDefault("db.dbname", "blogomatic.db")
+
     // Set the name of the configuration file (without the extension)
     viper.SetConfigName("config")
     // Set the path to look for the configuration file
     viper.AddConfigPath(".")
-    // Enable viper to read environment variables with a specific prefix
-    viper.SetEnvPrefix("APP")
+
     // Enable viper to read environment variables
-    viper.AutomaticEnv()
+    viper.BindEnv("db.type", "DB_TYPE")
+	viper.BindEnv("db.host", "DB_HOST")
+	viper.BindEnv("db.port", "DB_PORT")
+	viper.BindEnv("db.user", "DB_USER")
+	viper.BindEnv("db.password", "DB_PASSWORD")
+	viper.BindEnv("db.dbname", "DB_NAME")
 
     // Read the configuration file
     if err := viper.ReadInConfig(); err != nil {
@@ -29,16 +37,12 @@ func loadConfig() {
         if _, ok := err.(viper.ConfigFileNotFoundError); ok {
             // Configuration file not found
             log.Println("Configuration file not found, using default values")
-			// Set default values for the configuration variables
-			viper.SetDefault("db.type", "")
-			viper.SetDefault("db.dbname", "blogomatic")
         } else {
             // Other error occurred, handle it accordingly
             panic(fmt.Errorf("failed to read configuration file: %w", err))
         }
     }
 }
-
 
 //go:embed web/blog/build/*
 var distFS embed.FS
@@ -57,8 +61,10 @@ func main() {
 			viper.GetString("db.password"),
 			viper.GetString("db.dbname"),
 		)
-	} else if dbName == "" || dbName == "blogomatic" {
-		dbConnectionString = "blogomatic.db"
+	} else if dbType == "sqlite" {
+		dbConnectionString = dbName
+	} else {
+		log.Fatalf("Unknown db.type: %s. Must be either sqlite or postgres.", dbType)
 	}
 
     db, err := db.InitializeDB(dbType, dbConnectionString)
