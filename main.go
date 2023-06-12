@@ -8,20 +8,23 @@ import (
 	"github.com/codepraxis-io/blogomatic/db"
 	"embed"
 	"fmt"
+	"io"
 	"net/http"
 	"log"
+	"os"
 	"path"
 )
 
-func loadConfig() {
+//func loadConfig() {
+func loadConfig(reader io.Reader) error {
 	// Set default values for the configuration variables
 	viper.SetDefault("db.type", "sqlite")
 	viper.SetDefault("db.dbname", "blogomatic.db")
 
-    // Set the name of the configuration file (without the extension)
-    viper.SetConfigName("config")
-    // Set the path to look for the configuration file
-    viper.AddConfigPath(".")
+    // // Set the name of the configuration file (without the extension)
+    // viper.SetConfigName("config")
+    // // Set the path to look for the configuration file
+    // viper.AddConfigPath(".")
 
     // Enable viper to read environment variables
     viper.BindEnv("db.type", "DB_TYPE")
@@ -31,23 +34,48 @@ func loadConfig() {
 	viper.BindEnv("db.password", "DB_PASSWORD")
 	viper.BindEnv("db.dbname", "DB_NAME")
 
-    // Read the configuration file
-    if err := viper.ReadInConfig(); err != nil {
-        // Handle errors when reading the configuration file
-        if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-            // Configuration file not found
-            log.Println("Configuration file not found, using default values")
-        } else {
-            // Other error occurred, handle it accordingly
-            panic(fmt.Errorf("failed to read configuration file: %w", err))
-        }
-    }
+	// Set the configuration reader
+	viper.SetConfigType("yaml")
+	err := viper.ReadConfig(reader)
+	if err != nil {
+		// Handle errors when reading the configuration
+		if _, ok := err.(viper.ConfigParseError); ok {
+			// Configuration parse error
+			return err
+		}
+		// Other error occurred, handle it accordingly
+		log.Println("Configuration file not found, using default values")
+	}
+
+    // // Read the configuration file
+    // if err := viper.ReadInConfig(); err != nil {
+    //     // Handle errors when reading the configuration file
+    //     if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+    //         // Configuration file not found
+    //         log.Println("Configuration file not found, using default values")
+    //     } else {
+    //         // Other error occurred, handle it accordingly
+    //         panic(fmt.Errorf("failed to read configuration file: %w", err))
+    //     }
+    // }
+	return nil
 }
 
 //go:embed web/blog/build/*
 var distFS embed.FS
 func main() {
-    loadConfig()
+    //loadConfig()
+
+	file, err := os.Open("config.yaml")
+	if err != nil {
+		log.Println("Configuration file not found, using default values")
+	}
+	defer file.Close()
+	
+	// Load the config from the file or use defaults
+	if err := loadConfig(file); err != nil {
+		log.Fatal(err)
+	}
 
     dbType := viper.GetString("db.type")
 	dbName := viper.GetString("db.dbname")
@@ -66,6 +94,8 @@ func main() {
 	} else {
 		log.Fatalf("Unknown db.type: %s. Must be either sqlite or postgres.", dbType)
 	}
+
+	fmt.Printf("dbConnectionString: %s\n", dbConnectionString)
 
     db, err := db.InitializeDB(dbType, dbConnectionString)
     if err != nil {
