@@ -16,4 +16,11 @@ run: app
 test: 
 	go test -v ./...
 
+coverage:
+	go test --cover  ./... -coverprofile=coverage.out
+	gocov convert coverage.out | gocov-xml > coverage.xml
+
+sonarqube: coverage
+	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
+
 all: clean app
