@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Install SonarScanner CLI
-SONAR_SCANNER_VERSION=4.8.0.2856
-wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
-unzip sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
-sudo mv sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt
-sudo ln -s /opt/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner
-rm -rf sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
-echo Add /opt/sonar-scanner/bin to $PATH.
+#SONAR_SCANNER_VERSION=4.8.0.2856
+#wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
+#unzip sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
+#sudo mv sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt
+#sudo ln -s /opt/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner
+#rm -rf sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
+#echo Add /opt/sonar-scanner/bin to $PATH.
 
 # Install OWASP Dependency Check
 OWASP_DC_VERSION=8.3.1
