@@ -20,6 +20,10 @@ coverage:
 	go test --cover  ./... -coverprofile=coverage.out
 	gocov convert coverage.out | gocov-xml > coverage.xml
 
+owasp-depcheck: all
+	mkdir -p owasp-scan-results; dependency-check.sh -s . --nodePackageSkipDevDependencies --nodeAuditSkipDevDependencies --disableYarnAudit \
+		--enableExperimental --disableOssIndex --disableAssembly -o owasp-scan-results -f ALL
+
 sonarqube: all coverage
 	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
 
