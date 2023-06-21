@@ -16,9 +16,6 @@ go get github.com/AlekSi/gocov-xml
 go install github.com/AlekSi/gocov-xml
 echo Make sure you set PATH=$HOME/go/bin:$PATH
 
-# Install SBOM tools
-go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
-
 # Install node 18.x / npm 9.x
 curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
 sudo bash nodesource_setup.sh
