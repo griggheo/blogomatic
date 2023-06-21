@@ -4,3 +4,4 @@ config.yaml
 coverage.*
 .scannerwork
 *scan-results
+*sbom*json

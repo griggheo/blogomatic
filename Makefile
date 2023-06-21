@@ -27,4 +27,8 @@ owasp-depcheck: all
 sonarqube: all coverage
 	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
 
+code-sbom-cyclonedx:
+	go mod tidy
+	cyclonedx-gomod mod -json -output build-sbom-cyclonedx.json
+
 all: clean app
