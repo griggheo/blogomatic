@@ -15,6 +15,12 @@ Install languages (go, npm) and test coverage tools
 $ ./scripts/install_languages.sh
 ```
 
+Install SBOM tools
+
+```
+$ ./scripts/install_sbom_tools.sh
+```
+
 Install scanning tools (SonarQube Scanner, OWASP Dependency Check)
 ```
 $./scripts/install_scanning_tools.sh
