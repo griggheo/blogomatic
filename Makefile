@@ -30,13 +30,22 @@ sonarqube: all coverage
 	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
 
 go-mod-sbom-cyclonedx:
+	mkdir -p sboms
 	go mod tidy
-	cyclonedx-gomod mod -json -output go-mod-sbom-cyclonedx.json
+	cyclonedx-gomod mod -json -output sboms/go-mod-sbom-cyclonedx.json
 
 go-mod-sbom-spdx:
+	mkdir -p sboms
 	go mod tidy
 	spdx-sbom-generator -f json
-	mv bom-go-mod.json go-mod-sbom-spdx.json
+	mv bom-go-mod.json sboms/go-mod-sbom-spdx.json
+
+npm-sbom-cyclonedx:
+	mkdir -p sboms
+	cyclonedx-npm web/blog/package-lock.json --output-file sboms/npm-sbom-cyclonedx.json
 
 docker-distroless-multistage:
 	docker build -t blogomatic:distroless-multistage -f Dockerfile.distroless-multistage .
+
+docker-alpine-multistage:
+	docker build -t blogomatic:alpine-multistage -f Dockerfile.alpine-multistage .
