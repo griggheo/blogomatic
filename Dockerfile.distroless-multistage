@@ -1,0 +1,28 @@
+# We chose bullseye == debian11 so we have the same libc as distroless/base-debian1
+# Otherwise by using the default golang:1.20 image we would get
+# docker run --rm blogomatic:distroless-multistage
+# /app: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found (required by /app)
+
+# Start by building the application.
+FROM golang:1.20.5-bullseye as build
+RUN cd /tmp \
+	&& curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh \
+	&& bash nodesource_setup.sh \
+	&& rm nodesource_setup.sh \
+	&& apt-get install -y nodejs
+
+WORKDIR /go/src/app
+COPY . .
+
+RUN cd web/blog \
+	&& npm install \
+	&& npm run build \
+	&& cd -
+
+RUN go mod tidy \
+	&& go build -o /go/bin/app
+
+# Now copy it into our base image.
+FROM gcr.io/distroless/base-debian11
+COPY --from=build /go/bin/app /
+CMD ["/app"]

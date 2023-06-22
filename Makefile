@@ -10,6 +10,8 @@ clean:
 	rm -rf bin
 	cd web/blog && rm -rf build node_modules
 
+all: clean app
+
 run: app
 	./bin/blogomatic
 
@@ -36,4 +38,5 @@ go-mod-sbom-spdx:
 	spdx-sbom-generator -f json
 	mv bom-go-mod.json go-mod-sbom-spdx.json
 
-all: clean app
+docker-distroless-multistage:
+	docker build -t blogomatic:distroless-multistage -f Dockerfile.distroless-multistage .
