@@ -5,20 +5,20 @@
 
 # Start by building the application.
 FROM golang:1.20.5-bullseye as build
-RUN cd /tmp \
-	&& curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh \
+WORKDIR /tmp
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh \
 	&& bash nodesource_setup.sh \
 	&& rm nodesource_setup.sh \
-	&& apt-get install -y nodejs
+	&& apt-get install -y nodejs --no-install-recommends
 
 WORKDIR /go/src/app
 COPY . .
 
-RUN cd web/blog \
-	&& npm install \
-	&& npm run build \
-	&& cd -
+WORKDIR /go/src/app/web/blog
+RUN npm install \
+	&& npm run build 
 
+WORKDIR /go/src/app
 RUN go mod tidy \
 	&& go build -o /go/bin/app
 

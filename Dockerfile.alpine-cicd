@@ -1,4 +1,4 @@
 FROM golang:1.20.5-alpine3.18
 
 # Install packages
-RUN apk add nodejs-current npm gcc alpine-sdk bash jq
+RUN apk add --no-cache nodejs-current npm gcc alpine-sdk bash jq

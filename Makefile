@@ -118,6 +118,9 @@ grype-scan-sbom-syft-spdx:
 
 grype-scan-code-sboms: grype-scan-go-mod-sbom-cyclonedx grype-scan-go-mod-sbom-spdx grype-scan-npm-sbom-cyclonedx grype-scan-sbom-syft grype-scan-sbom-syft-cyclonedx grype-scan-sbom-syft-spdx
 
+hadolint:
+	hadolint ${DOCKERFILE}
+
 docker-distroless-multistage:
 	docker build -t blogomatic:distroless-multistage -f Dockerfile.distroless-multistage .
 
