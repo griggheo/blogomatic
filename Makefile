@@ -4,7 +4,7 @@ web:
 	cd web/blog && npm install && npm run build
 
 app: web
-	go build -o bin/blogomatic
+	go build -buildvcs=false -o bin/blogomatic
 
 clean:
 	rm -rf bin
@@ -52,4 +52,8 @@ docker-alpine-multistage:
 	docker build -t blogomatic:alpine-multistage -f Dockerfile.alpine-multistage .
 
 docker-alpine-cicd:
-	docker build -t blogomatic:alpine-cicd -f ./cicd-docker-images/Dockerfile.alpine ./cicd-docker-images
+	docker build -t blogomatic:alpine-cicd -f Dockerfile.alpine-cicd .
+
+build-using-docker-alpine-cicd:
+	#docker run --rm -it -v `pwd`:/tmp/code blogomatic:alpine-cicd bash -c 'cd /tmp/code; make all; chown -R 1000:1000 .'
+	docker build -t blogomatic:alpine -f Dockerfile.alpine-insert-binary .
