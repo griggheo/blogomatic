@@ -23,8 +23,9 @@ coverage:
 	gocov convert coverage.out | gocov-xml > coverage.xml
 
 owasp-depcheck: all
-	mkdir -p owasp-scan-results; dependency-check.sh -s . --nodePackageSkipDevDependencies --nodeAuditSkipDevDependencies --disableYarnAudit \
-		--enableExperimental --disableOssIndex --disableAssembly -o owasp-scan-results -f ALL
+	mkdir -p scan-results/owasp-depcheck; dependency-check.sh -s . \
+		--nodePackageSkipDevDependencies --nodeAuditSkipDevDependencies --disableYarnAudit \
+		--enableExperimental --disableOssIndex --disableAssembly -o scan-results/owasp-depcheck -f ALL
 
 sonarqube: all coverage
 	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
@@ -40,7 +41,7 @@ go-mod-sbom-spdx:
 	spdx-sbom-generator -f json
 	mv bom-go-mod.json sboms/go-mod-sbom-spdx.json
 
-npm-sbom-cyclonedx:
+npm-sbom-cyclonedx: web
 	mkdir -p sboms
 	cyclonedx-npm web/blog/package-lock.json --output-file sboms/npm-sbom-cyclonedx.json
 

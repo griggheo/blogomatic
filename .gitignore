@@ -5,3 +5,4 @@ coverage.*
 .scannerwork
 *scan-results
 *sbom*json
+scan-results
