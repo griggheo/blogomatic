@@ -50,3 +50,6 @@ docker-distroless-multistage:
 
 docker-alpine-multistage:
 	docker build -t blogomatic:alpine-multistage -f Dockerfile.alpine-multistage .
+
+docker-alpine-cicd:
+	docker build -t blogomatic:alpine-cicd -f ./cicd-docker-images/Dockerfile.alpine ./cicd-docker-images
