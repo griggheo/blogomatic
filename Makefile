@@ -4,6 +4,7 @@ web:
 	cd web/blog && npm install && npm run build
 
 app: web
+	go mod tidy
 	go build -buildvcs=false -o bin/blogomatic
 
 clean:
@@ -33,18 +34,40 @@ sonarqube: all coverage
 
 go-mod-sbom-cyclonedx:
 	mkdir -p sboms
-	go mod tidy
+	make app
 	cyclonedx-gomod mod -json -output sboms/go-mod-sbom-cyclonedx.json
 
 go-mod-sbom-spdx:
 	mkdir -p sboms
-	go mod tidy
+	make app
 	spdx-sbom-generator -f json
 	mv bom-go-mod.json sboms/go-mod-sbom-spdx.json
 
+go-mod-sboms: go-mod-sbom-cyclonedx go-mod-sbom-spdx
+
 npm-sbom-cyclonedx: web
 	mkdir -p sboms
+	make web
 	cyclonedx-npm web/blog/package-lock.json --output-file sboms/npm-sbom-cyclonedx.json
+
+npm-sboms: npm-sbom-cyclonedx
+
+sbom-syft-json:
+	mkdir -p sboms
+	make all
+	syft packages dir:. -o syft-json --file sboms/sbom-syft.json
+
+sbom-syft-cyclonedx:
+	mkdir -p sboms
+	make all
+	syft packages dir:. -o cyclonedx-json --file sboms/sbom-syft-cyclonedx.json
+
+sbom-syft-spdx:
+	mkdir -p sboms
+	make all
+	syft packages dir:. -o spdx-json --file sboms/sbom-syft-spdx.json
+
+sbom-syft: sbom-syft-json sbom-syft-cyclonedx sbom-syft-spdx
 
 trivy-scan-go-mod-sbom-cyclonedx:
 	mkdir -p scan-results/trivy
@@ -78,7 +101,22 @@ grype-scan-npm-sbom-cyclonedx:
 	grype sbom:sboms/npm-sbom-cyclonedx.json -o json --file scan-results/grype/grype-scan-npm-sbom-cyclonedx.json
 	grype sbom:sboms/npm-sbom-cyclonedx.json -o sarif --file scan-results/grype/grype-scan-npm-sbom-cyclonedx.sarif
 
-grype-scan-code-sboms: grype-scan-go-mod-sbom-cyclonedx grype-scan-go-mod-sbom-spdx grype-scan-npm-sbom-cyclonedx
+grype-scan-sbom-syft:
+	mkdir -p scan-results/grype
+	grype sbom:sboms/sbom-syft.json -o json --file scan-results/grype/grype-scan-sbom-syft.json
+	grype sbom:sboms/sbom-syft.json -o sarif --file scan-results/grype/grype-scan-sbom-syft.sarif
+
+grype-scan-sbom-syft-cyclonedx:
+	mkdir -p scan-results/grype
+	grype sbom:sboms/sbom-syft-cyclonedx.json -o json --file scan-results/grype/grype-scan-sbom-syft-cyclonedx.json
+	grype sbom:sboms/sbom-syft-cyclonedx.json -o sarif --file scan-results/grype/grype-scan-sbom-syft-cyclonedx.sarif
+
+grype-scan-sbom-syft-spdx:
+	mkdir -p scan-results/grype
+	grype sbom:sboms/sbom-syft-spdx.json -o json --file scan-results/grype/grype-scan-sbom-syft-spdx.json
+	grype sbom:sboms/sbom-syft-spdx.json -o sarif --file scan-results/grype/grype-scan-sbom-syft-spdx.sarif
+
+grype-scan-code-sboms: grype-scan-go-mod-sbom-cyclonedx grype-scan-go-mod-sbom-spdx grype-scan-npm-sbom-cyclonedx grype-scan-sbom-syft grype-scan-sbom-syft-cyclonedx grype-scan-sbom-syft-spdx
 
 docker-distroless-multistage:
 	docker build -t blogomatic:distroless-multistage -f Dockerfile.distroless-multistage .
