@@ -1,3 +1,12 @@
+VERSION=$(shell git describe --tags --always)
+COMMIT=$(shell git rev-parse HEAD)
+BUILD=$(shell date +%FT%T%z)
+
+CONTAINER ?= docker
+CPUTYPE=$(shell uname -m | sed 's/x86_64/amd64/')
+GITHUB_REPOSITORY ?= codepraxis-io/blogomatic
+LOCAL_IMAGE_NAME ?= blogomatic-local
+
 .PHONY: web app
 
 web:
@@ -22,6 +31,18 @@ test:
 coverage:
 	go test --cover  ./... -coverprofile=coverage.out
 	gocov convert coverage.out | gocov-xml > coverage.xml
+
+
+# build bins for goos/goarch of current host
+goreleaser_build_bins:
+	goreleaser build --clean --snapshot --single-target
+
+goreleaser_build_local_container: GORELEASER_CURRENT_TAG ?= v0.0.0-$(LOCAL_IMAGE_NAME)
+goreleaser_build_local_container:
+	GITHUB_REPOSITORY=$(GITHUB_REPOSITORY) \
+	GORELEASER_CURRENT_TAG=$(GORELEASER_CURRENT_TAG) \
+	DOCKER_CONTEXT=$(shell docker context show) \
+	goreleaser release --clean --snapshot --skip-sign --skip-sbom
 
 owasp-depcheck: all
 	mkdir -p scan-results/owasp-depcheck
