@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blogomatic
+data:
+  DB_HOST: test
+  DB_USER: blogomatic
+  DB_NAME: blogomatic

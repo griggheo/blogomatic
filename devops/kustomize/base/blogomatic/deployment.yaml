@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blogomatic
+  labels:
+    app: blogomatic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blogomatic
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: blogomatic
+    spec:
+      containers:
+        - name: blogomatic
+          image: timoniersystems/blogomatic:latest
+          imagePullPolicy: "Always"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          envFrom:
+            - configMapRef:
+                name: blogomatic
+          volumeMounts:
+            - name: blogomatic-volume
+              mountPath: /home/config/
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - configMap:
+            name: blogomatic-config
+          name: blogomatic-volume
