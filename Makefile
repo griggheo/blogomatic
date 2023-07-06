@@ -121,8 +121,13 @@ grype-scan-code-sboms: grype-scan-go-mod-sbom-cyclonedx grype-scan-go-mod-sbom-s
 hadolint:
 	hadolint ${DOCKERFILE}
 
-docker-distroless-multistage:
+docker-build-distroless-multistage:
 	docker build -t blogomatic:distroless-multistage -f Dockerfile.distroless-multistage .
+
+docker-tag-push-distroless-multistage: docker-build-distroless-multistage
+	# assumes we already ran `docker login`
+	docker tag blogomatic:distroless-multistage timoniersystems/blogomatic:distroless-multistage
+	docker push timoniersystems/blogomatic:distroless-multistage
 
 docker-alpine-multistage:
 	docker build -t blogomatic:alpine-multistage -f Dockerfile.alpine-multistage .
@@ -133,3 +138,4 @@ docker-alpine-cicd:
 build-using-docker-alpine-cicd:
 	docker run --rm -it -v `pwd`:/tmp/code blogomatic:alpine-cicd bash -c 'cd /tmp/code; make all; chown -R 1000:1000 .'
 	docker build -t blogomatic:alpine -f Dockerfile.alpine-insert-binary .
+

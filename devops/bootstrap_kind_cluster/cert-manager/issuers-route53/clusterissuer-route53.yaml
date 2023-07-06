@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-route53
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: info@codepraxis.dev
+    privateKeySecretRef:
+      name: letsencrypt-route53
+    solvers:
+    - selector:
+        dnsZones:
+          - "codepraxis.dev"
+      dns01:
+        route53:
+          region: us-west-2
+          accessKeyID: AKIAS5MTOYCCV4EEACHW
+          secretAccessKeySecretRef:
+            name: aws-route53-creds
+            key: aws-secret-key

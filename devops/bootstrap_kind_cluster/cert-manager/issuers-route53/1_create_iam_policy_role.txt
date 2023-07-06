@@ -1,0 +1,4 @@
+* Create IAM policy called CertManagerPermissionsForRoute53 based on route53-iam-policy.json
+* Create IAM group called CertManagerRoute53Group and associate above policy to it
+* Create IAM user called CertManagerRoute53User and add it to CertManagerRoute53Group
+* Download AWS keys for CertManagerRoute53User
