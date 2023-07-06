@@ -42,7 +42,7 @@ goreleaser_build_local_container:
 	GITHUB_REPOSITORY=$(GITHUB_REPOSITORY) \
 	GORELEASER_CURRENT_TAG=$(GORELEASER_CURRENT_TAG) \
 	DOCKER_CONTEXT=$(shell docker context show) \
-	goreleaser release --clean --snapshot --skip-sign --skip-sbom
+	goreleaser release --clean --snapshot --skip-sign
 
 owasp-depcheck: all
 	mkdir -p scan-results/owasp-depcheck
