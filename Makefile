@@ -99,6 +99,12 @@ sbom-syft-spdx:
 
 sbom-syft: sbom-syft-json sbom-syft-cyclonedx sbom-syft-spdx
 
+cyclonedx-merge-code-sboms-and-scan: go-mod-sbom-cyclonedx npm-sbom-cyclonedx
+	mkdir -p scan-results/trivy
+	cyclonedx merge --input-files sboms/go-mod-sbom-cyclonedx.json sboms/npm-sbom-cyclonedx.json  --output-file sboms/code-cyclonedx.json
+	trivy sbom sboms/code-cyclonedx.json
+	trivy sbom sboms/code-cyclonedx.json -f json -o scan-results/trivy/trivy-scan-code-sbom-cyclonedx.json
+
 trivy-scan-go-mod-sbom-cyclonedx:
 	mkdir -p scan-results/trivy
 	trivy sbom sboms/go-mod-sbom-cyclonedx.json -f json -o scan-results/trivy/trivy-scan-go-mod-sbom-cyclonedx.json

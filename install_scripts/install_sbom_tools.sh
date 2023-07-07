@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Install the generic cyclonedx CLI tool
+CYCLONEDX_CLI_VERSION=0.24.2
+wget https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CYCLONEDX_CLI_VERSION}/cyclonedx-linux-x64
+sudo mv cyclonedx-linux-x64 /usr/local/bin/cyclonedx
+sudo chmod +x /usr/local/bin/cyclonedx
+
+exit 1
+
 # Install cyclonedx golang sbom tool
 go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
 
