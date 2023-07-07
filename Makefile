@@ -35,9 +35,6 @@ coverage:
 	go test --cover  ./... -coverprofile=coverage.out
 	gocov convert coverage.out | gocov-xml > coverage.xml
 
-govulncheck:
-	govulncheck ./...
-
 # build bins for goos/goarch of current host
 goreleaser_build_bins:
 	goreleaser build --clean --snapshot --single-target
@@ -49,13 +46,20 @@ goreleaser_build_local_container:
 	DOCKER_CONTEXT=$(shell docker context show) \
 	goreleaser release --clean --snapshot --skip-sign
 
+govulncheck:
+	govulncheck ./...
+
+semgrep:
+	semgrep scan --config auto
+
 owasp-depcheck: all
 	mkdir -p scan-results/owasp-depcheck
 	dependency-check.sh -s . \
 		--nodePackageSkipDevDependencies --nodeAuditSkipDevDependencies --disableYarnAudit \
 		--enableExperimental --disableOssIndex --disableAssembly -o scan-results/owasp-depcheck -f ALL
 
-sonarqube: all coverage owasp-depcheck
+#sonarqube: all coverage owasp-depcheck
+sonarqube: 
 	sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${SONARQUBE_TOKEN}
 
 go-mod-sbom-cyclonedx:

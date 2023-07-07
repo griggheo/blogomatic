@@ -15,6 +15,7 @@ curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -
 chmod +x $HOME/.local/bin/syft
 
 # Install semgrep
+sudo apt install -y python3-pip
 python3 -m pip install semgrep
 
 # Install hadolint
