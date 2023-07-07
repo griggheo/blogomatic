@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Install gotestsum
+go install gotest.tools/gotestsum@latest
+
 # Install go coverage tools
 go get github.com/axw/gocov/...
 go install github.com/axw/gocov/...

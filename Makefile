@@ -35,6 +35,12 @@ coverage:
 	go test --cover  ./... -coverprofile=coverage.out
 	gocov convert coverage.out | gocov-xml > coverage.xml
 
+gotestsum:
+	gotestsum --format testname
+	gotestsum --jsonfile tmp.json.log \
+	--post-run-command "bash -c 'echo; echo Slowest tests;gotestsum tool slowest --num 10 --jsonfile tmp.json.log'"
+	rm -rf tmp.json.log
+
 # build bins for goos/goarch of current host
 goreleaser_build_bins:
 	goreleaser build --clean --snapshot --single-target
