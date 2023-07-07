@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: distroless
+
+images:
+- name: timoniersystems/blogomatic
+  newName: timoniersystems/blogomatic
+  newTag: distroless-multistage-126d300
+
+configMapGenerator:
+- behavior: replace
+  files:
+  - blogomatic/config.yaml
+  name: blogomatic-config
+
+resources:
+- ./blogomatic/ingress.yaml
+- ./blogomatic/sealed-secret.yaml
+- ../../base/
+
+patches:
+- path: ./blogomatic/configmap.yaml

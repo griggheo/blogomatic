@@ -18,10 +18,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - blogomatic.codepraxis.dev
+    - blogomatic-test-alpine.codepraxis.dev
     secretName: wildcard-cert-route53-tls
   rules:
-    - host: blogomatic-test.codepraxis.dev
+    - host: blogomatic-test-alpine.codepraxis.dev
       http:
         paths:
         - pathType: Prefix

@@ -1,3 +1,0 @@
-db:
-  type: postgres
-  port: 5432

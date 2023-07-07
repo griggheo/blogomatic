@@ -31,8 +31,7 @@ func TestCreatePost(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Set up the expected SQL mock behavior
-	mock.ExpectPrepare(`INSERT INTO posts(title, content) VALUES(?,?)`).
-	ExpectExec().
+	mock.ExpectExec(`INSERT INTO posts(title, content) VALUES($1, $2) RETURNING id`).
 	WithArgs("Test Title", "Test Content").
 	WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -73,7 +72,7 @@ func TestEditPost(t *testing.T) {
 	c.SetParamValues("1")
 
 	// Set up the expected SQL mock behavior
-	mock.ExpectPrepare("UPDATE posts SET title = ?, content = ? WHERE id = ?").
+	mock.ExpectPrepare("UPDATE posts SET title = $1, content = $2 WHERE id = $3").
 		ExpectExec().
 		WithArgs("Updated Title", "Updated Content", "1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
@@ -114,7 +113,7 @@ func TestDeletePost(t *testing.T) {
 	c.SetParamValues("1")
 
 	// Set up the expected SQL mock behavior
-	mock.ExpectPrepare("DELETE FROM posts WHERE id = ?").
+	mock.ExpectPrepare("DELETE FROM posts WHERE id = $1").
 		ExpectExec().
 		WithArgs("1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
