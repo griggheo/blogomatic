@@ -1,0 +1,6 @@
+namespace: postgres-operator
+
+resources:
+- postgres-cert-primary.yaml
+- postgres-cert-repl.yaml
+- postgres-cluster.yaml

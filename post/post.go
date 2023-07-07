@@ -44,19 +44,27 @@ func (ph *PostHandler) CreatePost(c echo.Context) error {
 		return err
 	}
 
-	stmt, err := ph.db.Prepare("INSERT INTO posts(title, content) VALUES(?,?)")
+	var res sql.Result
+	var err error
+
+	// Handle PostgreSQL
+	if _, ok := ph.db.(*sql.DB); ok {
+		res, err = ph.db.Exec("INSERT INTO posts(title, content) VALUES($1, $2) RETURNING id", post.Title, post.Content)
+	} else {
+		// Handle SQLite
+		res, err = ph.db.Exec("INSERT INTO posts(title, content) VALUES(?, ?)", post.Title, post.Content)
+	}
+
 	if err != nil {
 		return err
 	}
 
-	res, err := stmt.Exec(post.Title, post.Content)
-	if err != nil {
-		return err
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		return err
+	// Retrieve the last inserted ID based on the database driver
+	var id int64
+	if _, ok := ph.db.(*sql.DB); ok {
+		id, _ = res.LastInsertId()
+	} else {
+		id, _ = res.RowsAffected()
 	}
 
 	post.ID = int(id)
@@ -71,9 +79,14 @@ func (ph *PostHandler) EditPost(c echo.Context) error {
 		return err
 	}
 
-	stmt, err := ph.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
+//	stmt, err := ph.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
+//	if err != nil {
+//		return err
+//	}
+
+	stmt, err := ph.db.Prepare("UPDATE posts SET title = $1, content = $2 WHERE id = $3")
 	if err != nil {
-		return err
+	    return err
 	}
 
 	_, err = stmt.Exec(post.Title, post.Content, id)
@@ -87,9 +100,14 @@ func (ph *PostHandler) EditPost(c echo.Context) error {
 func (ph *PostHandler) DeletePost(c echo.Context) error {
 	id := c.Param("id")
 
-	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
+//	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
+//	if err != nil {
+//		return err
+//	}
+
+	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = $1")
 	if err != nil {
-		return err
+	    return err
 	}
 
 	_, err = stmt.Exec(id)

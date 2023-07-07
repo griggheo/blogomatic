@@ -23,6 +23,10 @@ spec:
         - name: blogomatic
           image: timoniersystems/blogomatic:latest
           imagePullPolicy: "Always"
+            #          command:
+            #            - tail
+            #            - -f
+            #            - /dev/null
           resources:
             limits:
               cpu: 250m
@@ -30,12 +34,21 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+                #          env:
+                #            - name: DB_PASSWORD
+                #              valueFrom:
+                #                secretKeyRef:
+                #                  name: postgres-codepraxis-pguser-blogomatic
+                #                  key: password
           envFrom:
             - configMapRef:
                 name: blogomatic
-          volumeMounts:
-            - name: blogomatic-volume
-              mountPath: /home/config/
+            - secretRef:
+                name: blogomatic
+                  #          volumeMounts:
+                  #            - name: blogomatic-config-file
+                  #              mountPath: /
+                  #              subPath: config.yaml
           ports:
             - name: http
               containerPort: 8080
@@ -49,4 +62,4 @@ spec:
       volumes:
         - configMap:
             name: blogomatic-config
-          name: blogomatic-volume
+          name: blogomatic-config-file

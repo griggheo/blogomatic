@@ -1,0 +1,33 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-cert-route53
+spec:
+  secretName: wildcard-cert-route53-tls
+  issuerRef:
+    name: letsencrypt-prod-route53
+    kind: ClusterIssuer
+  commonName: '*.codepraxis.dev'
+  dnsNames:
+    - '*.codepraxis.dev'
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blogomatic
+spec:
+  tls:
+  - hosts:
+    - blogomatic.codepraxis.dev
+    secretName: wildcard-cert-route53-tls
+  rules:
+    - host: blogomatic-test.codepraxis.dev
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: blogomatic
+              port:
+                number: 80

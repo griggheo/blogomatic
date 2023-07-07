@@ -12,13 +12,15 @@ function App() {
   }, []);
 
   const fetchPosts = async () => {
-    const response = await fetch('http://' + window.location.hostname + ':8080/posts');
+    //const response = await fetch('https://' + window.location.hostname + ':443/posts');
+    const response = await fetch('/posts');
     const data = await response.json();
     setPosts(data);
   };
 
   const createPost = async () => {
-    const response = await fetch('http://' + window.location.hostname + ':8080/posts', {
+    //const response = await fetch('https://' + window.location.hostname + ':443/posts', {
+    const response = await fetch('/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: newPostTitle, content: newPostContent }),
@@ -33,7 +35,8 @@ function App() {
   const deletePost = async (postId) => {
     const confirmed = window.confirm('Are you sure you want to delete this post?');
     if (confirmed) {
-      const response = await fetch('http://' + window.location.hostname + `:8080/posts/${postId}`, {
+      //const response = await fetch('https://' + window.location.hostname + ':443/posts/${postId}', {
+      const response = await fetch('/posts/${postId}', {
         method: 'DELETE',
       });
       if (response.ok) {
@@ -52,7 +55,8 @@ function App() {
   };
 
   const updatePost = async () => {
-    const response = await fetch('http://' + window.location.hostname + `:8080/posts/${editPostId}`, {
+    //const response = await fetch('https://' + window.location.hostname + ':443/posts/${editPostId}', {
+    const response = await fetch('/posts/${editPostId}', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: newPostTitle, content: newPostContent }),

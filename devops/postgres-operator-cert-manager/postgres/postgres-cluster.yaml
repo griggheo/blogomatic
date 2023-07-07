@@ -1,0 +1,56 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: postgres-codepraxis
+spec:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-15.2-0
+  postgresVersion: 15
+  customReplicationTLSSecret:
+    name: postgres-repl-codepraxis-tls
+  customTLSSecret:
+    name: postgres-codepraxis-tls
+  users:
+    - name: blogomatic
+      databases:
+        - blogomatic
+      options: "SUPERUSER"
+  instances:
+    - replicas: 1
+      resources:
+        limits:
+          cpu: 512m
+          memory: 1Gi
+      dataVolumeClaimSpec:
+        accessModes:
+        - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: 1Gi
+  backups:
+    pgbackrest:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.41-4
+      global: 
+        repo1-retention-full: "1"
+        repo1-retention-full-type: "count"
+        repo1-retention-archive: "1"
+      repos:
+      - name: repo1
+        volume:
+          volumeClaimSpec:
+            accessModes:
+            - "ReadWriteOnce"
+            resources:
+              requests:
+                storage: 1Gi
+
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        parameters:
+          max_connections: 500
+        pg_hba:
+          - local all "postgres" peer
+          - hostssl replication "_crunchyrepl" all cert
+          - hostssl "postgres" "_crunchyrepl" all cert
+          - host all "_crunchyrepl" all reject
+          - hostssl blogomatic blogomatic 0.0.0.0/0 scram-sha-256
