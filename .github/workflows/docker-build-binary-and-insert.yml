@@ -1,4 +1,4 @@
-name: app-docker-pipelines
+name: docker-build-binary-and-insert
 
 on:
   push:
