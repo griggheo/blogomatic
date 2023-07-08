@@ -47,11 +47,6 @@ on:
 jobs:
   app-build:
     runs-on: ubuntu-latest
-    container:
-      image: ${{ inputs.docker_build_image }}
-      # credentials:
-      #   username: ${{secrets.destination_registry_username}}
-      #   password: ${{secrets.destination_registry_password}}
     env:
       BUILD_APP_SCRIPT: ${{ inputs.build_app_script }}
       BUILD_DIR: ${{ inputs.build_dir }}
@@ -80,6 +75,11 @@ jobs:
           fi
           echo "BLOB_TAG=${BLOB_TAG}" >> $GITHUB_OUTPUT
       - name: Build application using provided script
+        container:
+          image: ${{ inputs.docker_build_image }}
+          # credentials:
+          #   username: ${{secrets.destination_registry_username}}
+          #   password: ${{secrets.destination_registry_password}}
         shell: bash
         run: |
           bash $BUILD_APP_SCRIPT
