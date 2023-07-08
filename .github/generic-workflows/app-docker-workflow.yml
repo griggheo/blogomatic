@@ -1,0 +1,301 @@
+name: Docker Build Scan Push Workflow for Applications
+
+on:
+  workflow_call:
+    inputs:
+      build_dir:
+        description: 'Directory where the build script saves its artifacts'
+        required: false
+        default: ''
+        type: string
+      cosign_blob_name:
+        description: 'OCI blob artifact name for cosign upload'
+        required: false
+        default: ''
+        type: string
+      destination_registry:
+        description: 'Destination Docker registry'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      dockerfile_name:
+        description: 'Dockerfile name'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      dockerfile_scanner:
+        description: 'Tool for scanning Dockerfiles'
+        required: false
+        default: 'trivy'
+        type: string
+      docker_build_type:
+        description: 'Type of Docker build'
+        required: false
+        default: 'buildx'
+        type: string
+      docker_cicd_image:
+        description: 'Image to be used for the container running the jobs'
+        required: false
+        default: 'ghcr.io/codepraxis-io/ubuntu22.04:cicd'
+        type: string
+      docker_context_dir:
+        description: 'Docker context directory'
+        required: false
+        type: string
+        default: '.'
+      docker_image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      docker_image_scanner:
+        description: 'Tool for scanning Docker image'
+        required: false
+        default: 'trivy'
+        type: string
+      docker_image_tag:
+        description: 'Docker image tag'
+        required: false 
+        default: ''
+        type: string
+      docker_image_tag_suffix:
+        description: 'Docker image tag suffix'
+        required: false
+        default: ''
+        type: string
+      docker_run_image:
+        description: 'Image to be used as FROM image in app Dockerfile'
+        required: false
+        default: ''
+        type: string
+      docker_sbom_generator:
+        description: 'Tool for generating SBOM'
+        required: false
+        type: string
+        default: 'syft'
+      download_build_artifacts:
+        description: 'Whether to download the build artifacts before building the Docker image'
+        required: false
+        default: 'true'
+        type: string
+      scan_result_dir:
+        description: 'Directory for scan results'
+        required: false
+        default: 'scan_results'
+        type: string
+      stop_on_critical_vulns:
+        description: 'Whether to stop when Docker image scanner find critical vulnerabilities'
+        required: false
+        default: 'false'
+        type: string
+      verify_base_image_signature:
+        description: 'Whether to verify base Docker image signature with cosign'
+        required: false
+        default: 'true'
+        type: string
+    secrets:
+      destination_registry_username:
+        required: true
+      destination_registry_password:
+        required: true
+      cosign_private_key:
+        required: true
+      cosign_private_key_password:
+        required: true
+      cosign_public_key:
+        required: true
+    # outputs:
+    #   docker-tag-commit:
+    #     description: docker tag to be used in later actions
+    #     value: ${{ jobs.docker-build-push.outputs.docker-tag-commit }}
+
+jobs:
+  app-docker:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.docker_cicd_image }}
+      credentials:
+        username: ${{secrets.destination_registry_username}}
+        password: ${{secrets.destination_registry_password}}
+    env:
+      BUILD_DIR: ${{ inputs.build_dir }}
+      DESTINATION_REGISTRY: ${{ inputs.destination_registry }}
+      DESTINATION_REGISTRY_USERNAME: ${{secrets.destination_registry_username}}
+      DESTINATION_REGISTRY_PASSWORD: ${{secrets.destination_registry_password}}
+      DOCKERFILE_NAME: ${{ inputs.dockerfile_name }}
+      DOCKERFILE_SCANNER: ${{ inputs.dockerfile_scanner }}
+      DOCKER_BUILD_TYPE: ${{ inputs.docker_build_type }}
+      DOCKER_CONTEXT_DIR: ${{ inputs.docker_context_dir }}
+      DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
+      DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}
+      DOCKER_IMAGE_TAG_SUFFIX: ${{ inputs.docker_image_tag_suffix }}
+      DOCKER_IMAGE_SCANNER: ${{ inputs.docker_image_scanner }}
+      DOCKER_SBOM_GENERATOR: ${{ inputs.docker_sbom_generator }}
+      DOCKER_RUN_IMAGE: ${{ inputs.docker_run_image }}
+      SCAN_RESULT_DIR: "${{ inputs.scan_result_dir }}-${{ inputs.docker_image_tag_suffix }}"
+      STOP_ON_CRITICAL_VULNS: ${{ inputs.stop_on_critical_vulns }}      
+      COSIGN_BLOB_NAME: ${{ inputs.cosign_blob_name }}
+      COSIGN_PRIVATE_KEY: ${{secrets.cosign_private_key}}
+      COSIGN_PUBLIC_KEY: ${{secrets.cosign_public_key}}
+      COSIGN_PASSWORD: ${{secrets.cosign_private_key_password}}
+    steps:
+      - name: Mark workspace directory as safe
+        run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
+        shell: bash
+      - name: Code checkout
+        uses: actions/checkout@v3
+      - name: Prepare
+        id: prep
+        shell: bash
+        run: |
+          mkdir -p $SCAN_RESULT_DIR
+
+          echo github.run_id=${{github.run_id}}
+          echo github.run_number=${{github.run_number}}
+
+          GITHUB_SHA=${{github.sha}}
+          GITHUB_REF=${{github.ref}}
+          VERSION=${GITHUB_SHA::8}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF/refs\/tags\//}
+          fi
+          IMAGE_TAG=$VERSION
+          BLOB_TAG=$VERSION
+          if [ "$DOCKER_IMAGE_TAG" != "" ]; then
+            IMAGE_TAG=$DOCKER_IMAGE_TAG
+          fi
+          if [ "$DOCKER_IMAGE_TAG_SUFFIX" != "" ]; then
+            IMAGE_TAG="$IMAGE_TAG-$DOCKER_IMAGE_TAG_SUFFIX"
+          fi
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "BLOB_TAG=${BLOB_TAG}" >> $GITHUB_OUTPUT
+          # old style, deprecated
+          # echo ::set-output name=IMAGE_TAG::${IMAGE_TAG}
+      - name: Login to destination registry
+        shell: bash
+        run: |
+          docker login --username ${DESTINATION_REGISTRY_USERNAME} --password ${DESTINATION_REGISTRY_PASSWORD} ${DESTINATION_REGISTRY}
+      - name: Verify signature of base Docker image
+        if: inputs.verify_base_image_signature == 'true'
+        shell: bash
+        run: |
+          FROM_IMAGE=$DOCKER_RUN_IMAGE
+          if [ "$FROM_IMAGE" == "" ]; then
+            FROM_IMAGE=$(grep FROM $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/FROM\s+//g')
+            if [ "$FROM_IMAGE" == '${BASE_IMAGE}' ]; then
+              FROM_IMAGE=$(grep 'ARG BASE_IMAGE' $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/ARG BASE_IMAGE=//g')
+            fi
+            echo FROM_IMAGE=$FROM_IMAGE
+            cosign verify --key env://COSIGN_PUBLIC_KEY $FROM_IMAGE
+          fi
+      - name: Scan Dockerfile for vulnerabilities
+        shell: bash
+        run: |
+          if [ "$DOCKERFILE_SCANNER" == "semgrep" ]; then
+            semgrep --config=auto $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME --json -o $SCAN_RESULT_DIR/semgrep-dockerfile.json
+          fi
+          if [ "$DOCKERFILE_SCANNER" == "trivy" ]; then
+            ARGS="-f json -o $SCAN_RESULT_DIR/trivy-dockerfile.json $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME"
+            trivy config $ARGS
+          fi
+      - name: Download generated build artifacts as a cosign blob
+        if: ${{ inputs.download_build_artifacts == 'true' }}
+        shell: bash
+        run: |
+          BLOB_TAG=${{ steps.prep.outputs.BLOB_TAG }}
+          # first verify blob signature with cosign
+          cosign verify --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG
+          rm -rf $BUILD_DIR.tar
+          # export to tar with crane
+          crane export $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG $BUILD_DIR.tar
+          tar xf $BUILD_DIR.tar
+          find . $BUILD_DIR -ls
+          # if cyclonedx SBOM is present, move it to SCAN_RESULT_DIR
+          CYCLONEDX_SBOM=cyclonedx-sbom.json
+          if [ -f $BUILD_DIR/$CYCLONEDX_SBOM ]; then
+            mv $BUILD_DIR/$CYCLONEDX_SBOM $SCAN_RESULT_DIR
+          fi
+      - name: Build Docker image
+        if: ${{ inputs.docker_build_type == 'buildx' }}
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          echo Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG with buildx
+          pushd $DOCKER_CONTEXT_DIR
+            ARGS="-t $DOCKER_IMAGE_NAME:$IMAGE_TAG . -f $DOCKERFILE_NAME"
+            if [ "$DOCKER_RUN_IMAGE" != "" ]; then
+              ARGS="$ARGS --build-arg BASE_IMAGE=$DOCKER_RUN_IMAGE"
+            fi
+            echo Running: docker buildx build $ARGS
+            docker buildx build $ARGS
+          popd
+      - name: Scan Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          if [ "$DOCKER_IMAGE_SCANNER" == "trivy" ]; then
+            ARGS="-f json -o $SCAN_RESULT_DIR/trivy-scan.json"
+            if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
+              ARGS="--exit-code 1 --severity CRITICAL $ARGS"
+            fi
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: trivy image $ARGS
+            trivy image $ARGS
+          fi
+          if [ "$DOCKER_IMAGE_SCANNER" == "grype" ]; then
+            ARGS="-o json --file $SCAN_RESULT_DIR/grype-scan.json"
+            if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
+              ARGS="-f Critical $ARGS"
+            fi
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: grype $ARGS
+            grype $ARGS
+          fi
+      - name: Generate SBOM for Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          if [ "$DOCKER_SBOM_GENERATOR" == "syft" ]; then
+            ARGS="-o json --file $SCAN_RESULT_DIR/syft-sbom.json packages"
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: syft $ARGS
+            syft $ARGS
+          fi
+      - name: Push Docker Image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          docker tag $DOCKER_IMAGE_NAME:$IMAGE_TAG $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+          docker push $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Sign Docker image with cosign
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          cosign sign --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Attach scan result attestations to Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          for scan_result_file in $(ls $SCAN_RESULT_DIR); do
+            cosign attest --predicate $SCAN_RESULT_DIR/$scan_result_file --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+          done
+      - name: Verify Docker image signature
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          cosign verify --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Verify scan result attestations
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          ATTESTATION_PAYLOAD=$SCAN_RESULT_DIR/attestation_payload.json
+          cosign verify-attestation --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG | jq --slurp 'map(.payload | @base64d | fromjson | .predicate.Data)' > $ATTESTATION_PAYLOAD
+          keys=$(cat $ATTESTATION_PAYLOAD | jq -r 'keys[]')
+          for key in $keys; do
+            echo Saving payload \#$key to file $SCAN_RESULT_DIR/attestation_payload_$key.json
+            cat $ATTESTATION_PAYLOAD | jq -r  ".[$key]"  > $SCAN_RESULT_DIR/attestation_payload_$key.json
+          done
+      - name: Upload scan results as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.SCAN_RESULT_DIR}}
+          path: ${{env.SCAN_RESULT_DIR}}
