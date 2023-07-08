@@ -8,4 +8,5 @@ curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh \
 	&& apt-get install -y nodejs --no-install-recommends
 popd
 
+unset CI # otherwise warnings are treated as errors in `npm build`
 make all
