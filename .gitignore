@@ -7,3 +7,4 @@ coverage.*
 *scan-results
 *sbom*
 scan-results
+swagger.json

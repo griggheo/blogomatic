@@ -6,7 +6,7 @@ namespace: alpine
 images:
 - name: timoniersystems/blogomatic
   newName: timoniersystems/blogomatic
-  newTag: alpine-multistage-126d300
+  newTag: alpine-multistage-2f07e41
 
 configMapGenerator:
 - behavior: replace
@@ -21,3 +21,9 @@ resources:
 
 patches:
 - path: ./blogomatic/configmap.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: blogomatic
+  path: blogomatic/deployment-patch.yaml

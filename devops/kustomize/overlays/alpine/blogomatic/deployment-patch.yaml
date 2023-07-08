@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blogomatic
+spec:
+  template:
+    spec:
+      containers:
+        - name: blogomatic
+          securityContext:
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false

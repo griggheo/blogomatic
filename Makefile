@@ -2,13 +2,16 @@ VERSION=$(shell git describe --tags --always)
 COMMIT=$(shell git rev-parse HEAD)
 COMMIT_SHORT=$(shell git rev-parse --short HEAD)
 BUILD=$(shell date +%FT%T%z)
-SONARQUBE_TOKEN=$(shell cat ~/.sq)
 
 CONTAINER ?= docker
 CPUTYPE=$(shell uname -m | sed 's/x86_64/amd64/')
 GITHUB_REPOSITORY ?= codepraxis-io/blogomatic
 LOCAL_IMAGE_NAME ?= blogomatic-local
+
 SONARQUBE_URL ?= https://sonarqube.timonier.cloud
+SONARQUBE_TOKEN=$(shell cat ~/.sq)
+
+COSIGN_PRIVATE_KEY=~/.cosign/cosign.key
 
 .PHONY: web app
 
@@ -163,28 +166,27 @@ grype-scan-code-sboms: grype-scan-go-mod-sbom-cyclonedx grype-scan-go-mod-sbom-s
 hadolint:
 	hadolint ${DOCKERFILE}
 
-docker-build-distroless-multistage:
-	docker build -t blogomatic:distroless-multistage-${COMMIT_SHORT} -f Dockerfile.distroless-multistage .
-
-docker-tag-push-distroless-multistage: docker-build-distroless-multistage
+docker-workflow-distroless-multistage:
 	# assumes we already ran `docker login`
+	docker build -t blogomatic:distroless-multistage-${COMMIT_SHORT} -f Dockerfile.distroless-multistage .
 	docker tag blogomatic:distroless-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
+	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 
-docker-build-alpine-multistage:
-	docker build -t blogomatic:alpine-multistage-${COMMIT_SHORT} -f Dockerfile.alpine-multistage .
-
-docker-tag-push-alpine-multistage: docker-build-alpine-multistage
+docker-workflow-alpine-multistage:
 	# assumes we already ran `docker login`
+	docker build -t blogomatic:alpine-multistage-${COMMIT_SHORT} -f Dockerfile.alpine-multistage .
 	docker tag blogomatic:alpine-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
+	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 
-docker-alpine-cicd:
+docker-build-alpine-cicd:
 	docker build -t blogomatic:alpine-cicd -f Dockerfile.alpine-cicd .
 
-docker-build-tag-push-using-alpine-cicd:
+docker-workflow-using-alpine-cicd: docker-build-alpine-cicd
 	docker run --rm -it -v `pwd`:/tmp/code blogomatic:alpine-cicd bash -c 'cd /tmp/code; make all; chown -R 1000:1000 .'
 	docker build -t blogomatic:alpine-${COMMIT_SHORT} -f Dockerfile.alpine-insert-binary .
 	docker tag blogomatic:alpine-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
+	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 
