@@ -12,7 +12,7 @@ on:
 
 jobs:
   app-build-debian-bullseye:
-    uses: codepraxis-io/blogomatic/.github/generic-workflows/app-build-workflow.yml@main
+    uses: ./.github/workflows/generic/app-build-workflow.yml@main
     with:
       build_dir: 'bin'
       cosign_blob_name: ${{ github.repository }}-debian-bullseye
@@ -26,7 +26,7 @@ jobs:
       cosign_public_key: ${{secrets.COSIGN_PUBLIC_KEY}}
 
   app-docker-distroless-debian-bullseye:
-    uses: codepraxis-io/blogomatic/.github/generic-workflows/app-docker-workflow.yml@main
+    uses: ./.github/workflows/generic/app-docker-workflow.yml@main
     needs: ['app-build-debian-bullseye']
     with:
       build_dir: 'bin'
