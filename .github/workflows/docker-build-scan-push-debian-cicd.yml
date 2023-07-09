@@ -1,0 +1,47 @@
+name: docker-build-scan-push-debian-cicd
+on:
+  push:
+    # tags:        
+    #   - v*.*.*
+    branches:
+     - main
+    paths:
+      - "devops/cicd-images/Dockerfile.debian-cicd"
+  # create:
+  #   tags:
+  #     - v*
+  workflow_dispatch:
+jobs:
+  prep-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      docker-image-tag: ${{ steps.prep.outputs.docker-image-tag }}
+    steps:
+      - name: Prepare
+        id: prep
+        shell: bash
+        run: |
+          GITHUB_SHA=${{github.sha}}
+          GITHUB_REF=${{github.ref}}
+          VERSION=${GITHUB_SHA::8}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF/refs\/tags\//}
+          fi
+          IMAGE_TAG=$VERSION
+          echo "docker-image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+  pipeline:
+    needs: [prep-tags]
+    uses: .github/workflows/generic-docker-build-scan-push-workflow.yml
+    with:
+      docker_context_dir: devops/cicd-images
+      dockerfile_name: Dockerfile.debian-cicd
+      docker_image_name: blogomatic
+      #docker_image_tag: ${{ needs.prep-tags.outputs.docker-image-tag }}
+      docker_image_tag: debian-cicd
+      verify_base_image_signature: 'false'
+    secrets:
+      destination_registry_username: ${{ secrets.GH_PACKAGES_USERNAME }} 
+      destination_registry_password: ${{ secrets.GH_PAT }}
+      cosign_private_key: ${{ secrets.COSIGN_PRIVATE_KEY }} 
+      cosign_private_key_password: ${{ secrets.COSIGN_PRIVATE_KEY_PASSWORD }}
+      cosign_public_key: ${{ secrets.COSIGN_PUBLIC_KEY }}
