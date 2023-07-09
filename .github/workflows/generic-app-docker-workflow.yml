@@ -92,10 +92,15 @@ on:
         required: false
         default: 'true'
         type: string
+      kustomize_base_default_image_name:
+        description: 'Default image name in kustomize base'
+        required: false
+        default: ''
+        type: string
       kustomize_overlay_path:
         description: 'Path to kustomize overlay directory for GitOps'
         required: false
-        default: 'devops/kustomize/overlays/test'
+        default: ''
         type: string
     secrets:
       destination_registry_username:
@@ -142,6 +147,7 @@ jobs:
       COSIGN_PRIVATE_KEY: ${{secrets.cosign_private_key}}
       COSIGN_PUBLIC_KEY: ${{secrets.cosign_public_key}}
       COSIGN_PASSWORD: ${{secrets.cosign_private_key_password}}
+      KUSTOMIZE_BASE_DEFAULT_IMAGE_NAME: ${{ inputs.kustomize_base_default_image_name }}
       KUSTOMIZE_OVERLAY_PATH: ${{ inputs.kustomize_overlay_path }}
       GITHUB_USER: ${{ github.actor }}
       GITHUB_EMAIL: "${{ github.actor }}@users.noreply.github.com"
@@ -315,6 +321,7 @@ jobs:
       #     name: ${{env.SCAN_RESULT_DIR}}
       #     path: ${{env.SCAN_RESULT_DIR}}
       - name: Update Docker image tag for GitOps
+        if: ${{ inputs.kustomize_overlay_path != '' }}
         shell: bash
         run: |
           export IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
