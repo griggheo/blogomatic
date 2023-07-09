@@ -1,11 +1,11 @@
 name: docker-build-binary-and-insert
 
 on:
-  # push:
+  push:
     # tags:        
     #   - v*.*.*
-    # branches:
-    #  - main
+    branches:
+     - main
     # paths:
     #   - "src/**"
   workflow_call:
@@ -16,7 +16,7 @@ jobs:
     with:
       build_dir: 'bin'
       cosign_blob_name: ${{ github.repository }}-debian-bullseye
-      docker_build_image: 'golang:1.20.5-bullseye'
+      docker_build_image: 'ghcr.io/codepraxis-io/blogomatic:debian-cicd'
     #secrets: inherit
     secrets: 
       destination_registry_username: ${{secrets.GHCR_USERNAME}}
