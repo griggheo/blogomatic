@@ -31,6 +31,7 @@ jobs:
     with:
       build_dir: 'bin'
       cosign_blob_name: ${{ github.repository }}-debian-bullseye
+      docker_cicd_image: 'ghcr.io/codepraxis-io/blogomatic:debian-cicd'
       docker_image_name: ${{ github.repository }}
       docker_image_tag_suffix: 'distroless'
       dockerfile_name: 'Dockerfile.distroless'
