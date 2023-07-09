@@ -96,7 +96,7 @@ jobs:
           tar cf $BUILD_DIR.tar $BUILD_DIR/
           export COSIGN_DOCKER_MEDIA_TYPES=1
           cosign upload blob -f $BUILD_DIR.tar $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG
-          echo 'y\ny' | cosign sign-blob --key env://COSIGN_PRIVATE_KEY --output-signature sig $BUILD_DIR.tar
+          echo 'y' | cosign sign-blob --key env://COSIGN_PRIVATE_KEY --output-signature sig $BUILD_DIR.tar
       - name: Upload cosign blob signature as artifact
         uses: actions/upload-artifact@v3
         with:
