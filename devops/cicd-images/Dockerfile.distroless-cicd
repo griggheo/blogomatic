@@ -1,0 +1,125 @@
+FROM golang:1.20.5-bullseye
+
+ENV COSIGN_VERSION=2.1.1
+ENV CRANE_VERSION=0.15.2
+ENV KUBECTL_VERSION=1.27.0
+ENV KUSTOMIZE_VERSION=5.1.0
+ENV HELM_VERSION=3.10.2
+ENV SONAR_SCANNER_VERSION=4.8.0.2856
+ENV OWASP_DC_VERSION=8.3.1
+ENV CYCLONEDX_CLI_VERSION=0.24.2
+ENV SPDX_SBOM_GENERATOR_VERSION=0.0.15
+ENV HADOLINT_VERSION=2.12.0
+
+# install compilers, jre and other tools
+RUN apt-get update \
+	&& apt install -y build-essential openjdk-17-jre-headless jq sqlite3 unzip wget apt-transport-https gnupg lsb-release python3 python3-pip
+
+WORKDIR /tmp
+
+# install node and npm
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh \
+	&& bash nodesource_setup.sh \
+	&& rm nodesource_setup.sh \
+	&& apt-get install -y nodejs --no-install-recommends
+
+# install cosign
+RUN wget "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
+	&& mv cosign-linux-amd64 /usr/local/bin/cosign \
+	&& chmod +x /usr/local/bin/cosign
+
+# install crane
+RUN mkdir -p /tmp/crane
+WORKDIR /tmp/crane
+RUN curl -sL "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" > go-containerregistry.tar.gz \
+	&& tar xvfz go-containerregistry.tar.gz \
+	&& mv *crane /usr/local/bin 
+RUN rm -rf /tmp/crane
+
+# install go tools
+RUN mkdir -p /tmp/gotools
+WORKDIR /tmp/gotools
+RUN go mod init \
+	&& go install gotest.tools/gotestsum@latest \
+	&& go get github.com/axw/gocov/... \
+	&& go install github.com/axw/gocov/... \
+	&& go get github.com/AlekSi/gocov-xml \
+	&& go install github.com/AlekSi/gocov-xml \
+	&& go install golang.org/x/vuln/cmd/govulncheck@latest \
+	&& go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
+RUN rm -rf /tmp/gotools
+
+WORKDIR /tmp
+
+# install kubectl
+RUN curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o kubectl \
+	&& mv kubectl /usr/local/bin/ \
+	&& chmod +x /usr/local/bin/kubectl
+
+# install kustomize
+RUN wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz \
+	&& tar xfz kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz \
+	&& rm -rf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz \
+	&& mv kustomize /usr/local/bin/
+
+# install helm
+RUN curl -L https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -o /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
+	&& tar xfz helm-v${HELM_VERSION}-linux-amd64.tar.gz \
+	&& mv linux-amd64/helm /usr/local/bin/ \
+    && chmod +x /usr/local/bin/helm \
+	&& rm -rf helm* linux-amd64
+
+# install SonarScanner CLI
+RUN wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip \
+	&& unzip sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip \
+	&& mv sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt \
+	&& ln -s /opt/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner \
+	&& rm -rf sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip 
+
+RUN mkdir -p /opt/owasp
+WORKDIR /opt/owasp
+# install OWASP Dependency Check
+RUN wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${OWASP_DC_VERSION}/dependency-check-${OWASP_DC_VERSION}-release.zip" \
+	&& unzip dependency-check*.zip \
+    && chmod +x dependency-check/bin/dependency-check.sh \
+    && ln -s /opt/owasp/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check.sh \
+    && mkdir /opt/owasp/dependency-check/data \
+    && chmod a+w /opt/owasp/dependency-check/data
+
+WORKDIR /tmp
+# install the generic cyclonedx CLI tool
+RUN wget https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CYCLONEDX_CLI_VERSION}/cyclonedx-linux-x64 \
+	&& mv cyclonedx-linux-x64 /usr/local/bin/cyclonedx \
+	&& chmod +x /usr/local/bin/cyclonedx
+
+# install cyclonedx npm sbom tool
+RUN npm install --global @cyclonedx/cyclonedx-npm
+
+# install spdx sbom tool
+RUN wget https://github.com/opensbom-generator/spdx-sbom-generator/releases/download/v${SPDX_SBOM_GENERATOR_VERSION}/spdx-sbom-generator-v${SPDX_SBOM_GENERATOR_VERSION}-linux-amd64.tar.gz \
+	&& tar xvfz spdx-sbom-generator-v${SPDX_SBOM_GENERATOR_VERSION}-linux-amd64.tar.gz \
+	&& rm -rf spdx-sbom-generator-v${SPDX_SBOM_GENERATOR_VERSION}-linux-amd64.tar.gz \
+	&& mv spdx-sbom-generator /usr/local/bin
+
+# Install trivy
+RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add - \
+	&& echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list \
+	&& apt-get update \
+	&& apt-get install -y trivy
+
+# Install grype and syft
+RUN mkdir -p $HOME/.local/bin/ \
+	&& curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $HOME/.local/bin \
+	&& chmod +x $HOME/.local/bin/grype \
+	&& curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $HOME/.local/bin \
+	&& chmod +x $HOME/.local/bin/syft
+
+# Install semgrep
+RUN python3 -m pip install semgrep
+
+# Install hadolint
+RUN curl -Lo hadolint https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64 \
+	&& chmod +x hadolint \
+	&& mv hadolint /usr/local/bin/
+
+ENV PATH=$PATH:$HOME/.local/bin/:$HOME/go/bin:/opt/sonar-scanner/bin
