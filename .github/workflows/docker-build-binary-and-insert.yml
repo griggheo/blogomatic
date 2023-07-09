@@ -21,9 +21,9 @@ jobs:
     secrets: 
       destination_registry_username: ${{secrets.GHCR_USERNAME}}
       destination_registry_password: ${{secrets.GHCR_TOKEN}}
-      cosign_private_key: ${{secrets.COSIGN_PRIVATE_KEY}}
-      cosign_private_key_password: ${{secrets.COSIGN_PRIVATE_KEY_PASSWORD}}
-      cosign_public_key: ${{secrets.COSIGN_PUBLIC_KEY}}
+      cosign_private_key: ${{secrets.BLOGOMATIC_COSIGN_PRIVATE_KEY}}
+      cosign_private_key_password: ${{secrets.BLOGOMATIC_COSIGN_PRIVATE_KEY_PASSWORD}}
+      cosign_public_key: ${{secrets.BLOGOMATIC_COSIGN_PUBLIC_KEY}}
 
   app-docker-distroless-debian-bullseye:
     uses: ./.github/workflows/generic-app-docker-workflow.yml
@@ -42,9 +42,9 @@ jobs:
     secrets: 
       destination_registry_username: ${{secrets.GHCR_USERNAME}}
       destination_registry_password: ${{secrets.GHCR_TOKEN}}
-      cosign_private_key: ${{secrets.COSIGN_PRIVATE_KEY}}
-      cosign_private_key_password: ${{secrets.COSIGN_PRIVATE_KEY_PASSWORD}}
-      cosign_public_key: ${{secrets.COSIGN_PUBLIC_KEY}}
+      cosign_private_key: ${{secrets.BLOGOMATIC_COSIGN_PRIVATE_KEY}}
+      cosign_private_key_password: ${{secrets.BLOGOMATIC_COSIGN_PRIVATE_KEY_PASSWORD}}
+      cosign_public_key: ${{secrets.BLOGOMATIC_COSIGN_PUBLIC_KEY}}
 
   # app-build-alpine:
   #   uses: codepraxis-io/github-actions/.github/workflows/app-build-workflow.yml@main
