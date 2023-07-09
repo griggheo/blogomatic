@@ -282,7 +282,7 @@ jobs:
         run: |
           IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
           for scan_result_file in $(ls $SCAN_RESULT_DIR); do
-            cosign attest --predicate $SCAN_RESULT_DIR/$scan_result_file --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+            echo 'y' | cosign attest --predicate $SCAN_RESULT_DIR/$scan_result_file --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
           done
       - name: Verify Docker image signature
         shell: bash
