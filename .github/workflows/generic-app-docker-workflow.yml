@@ -201,7 +201,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: cosign-blob-signature
-          path: sig
+          path: ./sig-download
       - name: Download generated build artifacts as a cosign blob
         if: ${{ inputs.download_build_artifacts == 'true' }}
         shell: bash
@@ -210,7 +210,7 @@ jobs:
           # export to tar with crane
           crane export $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG $BUILD_DIR.tar
           # verify blob signature with cosign
-          cosign verify-blob --key env://COSIGN_PUBLIC_KEY --signature sig $BUILD_DIR.tar
+          cosign verify-blob --key env://COSIGN_PUBLIC_KEY --signature ./sig-download/sig $BUILD_DIR.tar
           tar xf $BUILD_DIR.tar
       - name: Build Docker image
         if: ${{ inputs.docker_build_type == 'buildx' }}

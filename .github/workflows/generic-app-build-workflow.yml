@@ -102,4 +102,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cosign-blob-signature
-          path: sig
+          path: ./sig
