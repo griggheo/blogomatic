@@ -31,7 +31,7 @@ jobs:
           echo "docker-image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
   pipeline:
     needs: [prep-tags]
-    uses: .github/workflows/generic-docker-build-scan-push-workflow.yml
+    uses: .github/workflows/generic-docker-build-scan-push-workflow.yml@main
     with:
       docker_context_dir: devops/cicd-images
       dockerfile_name: Dockerfile.debian-cicd
