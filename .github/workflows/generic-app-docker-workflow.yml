@@ -185,141 +185,141 @@ jobs:
           echo "BLOB_TAG=${BLOB_TAG}" >> $GITHUB_OUTPUT
           # old style, deprecated
           # echo ::set-output name=IMAGE_TAG::${IMAGE_TAG}
-      # - name: Login to destination registry
-      #   shell: bash
-      #   run: |
-      #     docker login --username ${DESTINATION_REGISTRY_USERNAME} --password ${DESTINATION_REGISTRY_PASSWORD} ${DESTINATION_REGISTRY}
-      # - name: Verify signature of base Docker image
-      #   if: inputs.verify_base_image_signature == 'true'
-      #   shell: bash
-      #   run: |
-      #     FROM_IMAGE=$DOCKER_RUN_IMAGE
-      #     if [ "$FROM_IMAGE" == "" ]; then
-      #       FROM_IMAGE=$(grep FROM $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/FROM\s+//g')
-      #       if [ "$FROM_IMAGE" == '${BASE_IMAGE}' ]; then
-      #         FROM_IMAGE=$(grep 'ARG BASE_IMAGE' $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/ARG BASE_IMAGE=//g')
-      #       fi
-      #       echo FROM_IMAGE=$FROM_IMAGE
-      #       cosign verify --key env://COSIGN_PUBLIC_KEY $FROM_IMAGE
-      #     fi
-      # - name: Scan Dockerfile for vulnerabilities
-      #   shell: bash
-      #   run: |
-      #     if [ "$DOCKERFILE_SCANNER" == "semgrep" ]; then
-      #       semgrep --config=auto $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME --json -o $SCAN_RESULT_DIR/semgrep-dockerfile.json
-      #     fi
-      #     if [ "$DOCKERFILE_SCANNER" == "trivy" ]; then
-      #       ARGS="-f json -o $SCAN_RESULT_DIR/trivy-dockerfile.json $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME"
-      #       trivy config $ARGS
-      #     fi
-      # - name: Download cosign blob signature as artifact
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: cosign-blob-signature
-      #     path: ./sig-download
-      # - name: Download generated build artifacts as a cosign blob
-      #   if: ${{ inputs.download_build_artifacts == 'true' }}
-      #   shell: bash
-      #   run: |
-      #     BLOB_TAG=${{ steps.prep.outputs.BLOB_TAG }}
-      #     # export to tar with crane
-      #     crane export $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG $BUILD_DIR.tar
-      #     # verify blob signature with cosign
-      #     cosign verify-blob --key env://COSIGN_PUBLIC_KEY --signature ./sig-download/sig $BUILD_DIR.tar
-      #     tar xf $BUILD_DIR.tar
-      # - name: Build Docker image
-      #   if: ${{ inputs.docker_build_type == 'buildx' }}
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     echo Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG with buildx
-      #     pushd $DOCKER_CONTEXT_DIR
-      #       ARGS="-t $DOCKER_IMAGE_NAME:$IMAGE_TAG . -f $DOCKERFILE_NAME"
-      #       if [ "$DOCKER_RUN_IMAGE" != "" ]; then
-      #         ARGS="$ARGS --build-arg BASE_IMAGE=$DOCKER_RUN_IMAGE"
-      #       fi
-      #       echo Running: docker buildx build $ARGS
-      #       docker buildx build $ARGS
-      #     popd
-      # - name: Scan Docker image
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     if [ "$DOCKER_IMAGE_SCANNER" == "trivy" ]; then
-      #       ARGS="-f json -o $SCAN_RESULT_DIR/trivy-scan.json"
-      #       if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
-      #         ARGS="--exit-code 1 --severity CRITICAL $ARGS"
-      #       fi
-      #       ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
-      #       echo Running: trivy image $ARGS
-      #       trivy image $ARGS
-      #     fi
-      #     if [ "$DOCKER_IMAGE_SCANNER" == "grype" ]; then
-      #       ARGS="-o json --file $SCAN_RESULT_DIR/grype-scan.json"
-      #       if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
-      #         ARGS="-f Critical $ARGS"
-      #       fi
-      #       ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
-      #       echo Running: grype $ARGS
-      #       grype $ARGS
-      #     fi
-      # - name: Generate SBOM for Docker image
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     if [ "$DOCKER_SBOM_GENERATOR" == "syft" ]; then
-      #       ARGS="-o json --file $SCAN_RESULT_DIR/syft-sbom.json packages"
-      #       ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
-      #       echo Running: syft $ARGS
-      #       syft $ARGS
-      #     fi
-      #     if [ "$DOCKER_SBOM_GENERATOR" == "trivy" ]; then
-      #       ARGS="image --format cyclonedx --output $SCAN_RESULT_DIR/trivy-cyclonedx-sbom.json"
-      #       ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
-      #       echo Running: trivy $ARGS
-      #       trivy $ARGS
-      #     fi
-      # - name: Push Docker Image
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     docker tag $DOCKER_IMAGE_NAME:$IMAGE_TAG $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
-      #     docker push $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
-      # - name: Sign Docker image with cosign
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     # note that we had to make the ghcr.io package public so cosign prompts for just one answer
-      #     # if the package is private, cosign prompts for input twice and it is hard to automate
-      #     echo 'y' | cosign sign --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
-      # - name: Attach scan results as attestations to Docker image
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     for scan_result_file in $(ls $SCAN_RESULT_DIR); do
-      #       echo 'y' | cosign attest --predicate $SCAN_RESULT_DIR/$scan_result_file --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
-      #     done
-      # - name: Verify Docker image signature
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     cosign verify --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
-      # - name: Verify scan result attestations
-      #   shell: bash
-      #   run: |
-      #     IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
-      #     ATTESTATION_PAYLOAD=$SCAN_RESULT_DIR/attestation_payload.json
-      #     cosign verify-attestation --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG | jq --slurp 'map(.payload | @base64d | fromjson | .predicate.Data)' > $ATTESTATION_PAYLOAD
-      #     keys=$(cat $ATTESTATION_PAYLOAD | jq -r 'keys[]')
-      #     for key in $keys; do
-      #       echo Saving payload \#$key to file $SCAN_RESULT_DIR/attestation_payload_$key.json
-      #       cat $ATTESTATION_PAYLOAD | jq -r  ".[$key]"  > $SCAN_RESULT_DIR/attestation_payload_$key.json
-      #     done
-      # - name: Upload scan results as artifacts
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: ${{env.SCAN_RESULT_DIR}}
-      #     path: ${{env.SCAN_RESULT_DIR}}
+      - name: Login to destination registry
+        shell: bash
+        run: |
+          docker login --username ${DESTINATION_REGISTRY_USERNAME} --password ${DESTINATION_REGISTRY_PASSWORD} ${DESTINATION_REGISTRY}
+      - name: Verify signature of base Docker image
+        if: inputs.verify_base_image_signature == 'true'
+        shell: bash
+        run: |
+          FROM_IMAGE=$DOCKER_RUN_IMAGE
+          if [ "$FROM_IMAGE" == "" ]; then
+            FROM_IMAGE=$(grep FROM $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/FROM\s+//g')
+            if [ "$FROM_IMAGE" == '${BASE_IMAGE}' ]; then
+              FROM_IMAGE=$(grep 'ARG BASE_IMAGE' $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME | sed -r 's/ARG BASE_IMAGE=//g')
+            fi
+            echo FROM_IMAGE=$FROM_IMAGE
+            cosign verify --key env://COSIGN_PUBLIC_KEY $FROM_IMAGE
+          fi
+      - name: Scan Dockerfile for vulnerabilities
+        shell: bash
+        run: |
+          if [ "$DOCKERFILE_SCANNER" == "semgrep" ]; then
+            semgrep --config=auto $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME --json -o $SCAN_RESULT_DIR/semgrep-dockerfile.json
+          fi
+          if [ "$DOCKERFILE_SCANNER" == "trivy" ]; then
+            ARGS="-f json -o $SCAN_RESULT_DIR/trivy-dockerfile.json $DOCKER_CONTEXT_DIR/$DOCKERFILE_NAME"
+            trivy config $ARGS
+          fi
+      - name: Download cosign blob signature as artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cosign-blob-signature
+          path: ./sig-download
+      - name: Download generated build artifacts as a cosign blob
+        if: ${{ inputs.download_build_artifacts == 'true' }}
+        shell: bash
+        run: |
+          BLOB_TAG=${{ steps.prep.outputs.BLOB_TAG }}
+          # export to tar with crane
+          crane export $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG $BUILD_DIR.tar
+          # verify blob signature with cosign
+          cosign verify-blob --key env://COSIGN_PUBLIC_KEY --signature ./sig-download/sig $BUILD_DIR.tar
+          tar xf $BUILD_DIR.tar
+      - name: Build Docker image
+        if: ${{ inputs.docker_build_type == 'buildx' }}
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          echo Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG with buildx
+          pushd $DOCKER_CONTEXT_DIR
+            ARGS="-t $DOCKER_IMAGE_NAME:$IMAGE_TAG . -f $DOCKERFILE_NAME"
+            if [ "$DOCKER_RUN_IMAGE" != "" ]; then
+              ARGS="$ARGS --build-arg BASE_IMAGE=$DOCKER_RUN_IMAGE"
+            fi
+            echo Running: docker buildx build $ARGS
+            docker buildx build $ARGS
+          popd
+      - name: Scan Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          if [ "$DOCKER_IMAGE_SCANNER" == "trivy" ]; then
+            ARGS="-f json -o $SCAN_RESULT_DIR/trivy-scan.json"
+            if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
+              ARGS="--exit-code 1 --severity CRITICAL $ARGS"
+            fi
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: trivy image $ARGS
+            trivy image $ARGS
+          fi
+          if [ "$DOCKER_IMAGE_SCANNER" == "grype" ]; then
+            ARGS="-o json --file $SCAN_RESULT_DIR/grype-scan.json"
+            if [ "$STOP_ON_CRITICAL_VULNS" == "true" ]; then
+              ARGS="-f Critical $ARGS"
+            fi
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: grype $ARGS
+            grype $ARGS
+          fi
+      - name: Generate SBOM for Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          if [ "$DOCKER_SBOM_GENERATOR" == "syft" ]; then
+            ARGS="-o json --file $SCAN_RESULT_DIR/syft-sbom.json packages"
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: syft $ARGS
+            syft $ARGS
+          fi
+          if [ "$DOCKER_SBOM_GENERATOR" == "trivy" ]; then
+            ARGS="image --format cyclonedx --output $SCAN_RESULT_DIR/trivy-cyclonedx-sbom.json"
+            ARGS="$ARGS $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+            echo Running: trivy $ARGS
+            trivy $ARGS
+          fi
+      - name: Push Docker Image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          docker tag $DOCKER_IMAGE_NAME:$IMAGE_TAG $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+          docker push $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Sign Docker image with cosign
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          # note that we had to make the ghcr.io package public so cosign prompts for just one answer
+          # if the package is private, cosign prompts for input twice and it is hard to automate
+          echo 'y' | cosign sign --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Attach scan results as attestations to Docker image
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          for scan_result_file in $(ls $SCAN_RESULT_DIR); do
+            echo 'y' | cosign attest --predicate $SCAN_RESULT_DIR/$scan_result_file --key env://COSIGN_PRIVATE_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+          done
+      - name: Verify Docker image signature
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          cosign verify --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Verify scan result attestations
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ steps.prep.outputs.IMAGE_TAG }}
+          ATTESTATION_PAYLOAD=$SCAN_RESULT_DIR/attestation_payload.json
+          cosign verify-attestation --key env://COSIGN_PUBLIC_KEY $DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG | jq --slurp 'map(.payload | @base64d | fromjson | .predicate.Data)' > $ATTESTATION_PAYLOAD
+          keys=$(cat $ATTESTATION_PAYLOAD | jq -r 'keys[]')
+          for key in $keys; do
+            echo Saving payload \#$key to file $SCAN_RESULT_DIR/attestation_payload_$key.json
+            cat $ATTESTATION_PAYLOAD | jq -r  ".[$key]"  > $SCAN_RESULT_DIR/attestation_payload_$key.json
+          done
+      - name: Upload scan results as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.SCAN_RESULT_DIR}}
+          path: ${{env.SCAN_RESULT_DIR}}
       - name: Update Docker image tag for GitOps
         if: ${{ inputs.kustomize_overlay_path != '' }}
         shell: bash
