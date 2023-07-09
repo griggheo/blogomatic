@@ -79,27 +79,27 @@ jobs:
             BLOB_TAG=${GITHUB_REF/refs\/tags\//}
           fi
           echo "BLOB_TAG=${BLOB_TAG}" >> $GITHUB_OUTPUT
-      - name: Build application using provided script
-        shell: bash
-        run: |
-          bash $BUILD_APP_SCRIPT
-      - name: Login to destination Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ inputs.destination_registry }}
-          username: ${{secrets.destination_registry_username}}
-          password: ${{secrets.destination_registry_password}}
-      - name: Upload and sign generated build artifacts as OCI blob using cosign
-        shell: bash
-        run: |
-          BLOB_TAG=${{ steps.prep.outputs.BLOB_TAG }}
-          tar cfz $BUILD_DIR.tar.gz $BUILD_DIR/
-          tar cf $BUILD_DIR.tar $BUILD_DIR/
-          export COSIGN_DOCKER_MEDIA_TYPES=1
-          cosign upload blob -f $BUILD_DIR.tar.gz $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG
-          echo 'y' | cosign sign-blob --key env://COSIGN_PRIVATE_KEY --output-signature sig $BUILD_DIR.tar
-      - name: Upload cosign blob signature as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: cosign-blob-signature
-          path: ./sig
+      # - name: Build application using provided script
+      #   shell: bash
+      #   run: |
+      #     bash $BUILD_APP_SCRIPT
+      # - name: Login to destination Container Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ${{ inputs.destination_registry }}
+      #     username: ${{secrets.destination_registry_username}}
+      #     password: ${{secrets.destination_registry_password}}
+      # - name: Upload and sign generated build artifacts as OCI blob using cosign
+      #   shell: bash
+      #   run: |
+      #     BLOB_TAG=${{ steps.prep.outputs.BLOB_TAG }}
+      #     tar cfz $BUILD_DIR.tar.gz $BUILD_DIR/
+      #     tar cf $BUILD_DIR.tar $BUILD_DIR/
+      #     export COSIGN_DOCKER_MEDIA_TYPES=1
+      #     cosign upload blob -f $BUILD_DIR.tar.gz $DESTINATION_REGISTRY/$COSIGN_BLOB_NAME-$BUILD_DIR:$BLOB_TAG
+      #     echo 'y' | cosign sign-blob --key env://COSIGN_PRIVATE_KEY --output-signature sig $BUILD_DIR.tar
+      # - name: Upload cosign blob signature as artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: cosign-blob-signature
+      #     path: ./sig

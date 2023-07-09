@@ -39,6 +39,7 @@ jobs:
       docker_sbom_generator: 'trivy'
       #stop_on_critical_vulns: 'true'
       verify_base_image_signature: 'false'
+      kustomize_overlay_path: 'devops/kustomize/overlays/test'
     #secrets: inherit
     secrets: 
       destination_registry_username: ${{secrets.GHCR_USERNAME}}
