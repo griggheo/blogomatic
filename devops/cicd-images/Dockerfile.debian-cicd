@@ -144,3 +144,4 @@ RUN python3 -m pip install semgrep
 RUN curl -Lo hadolint https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64 \
 	&& chmod +x hadolint \
 	&& mv hadolint /usr/local/bin/
+

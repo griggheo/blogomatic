@@ -8,8 +8,6 @@ on:
      - main
     paths:
       - "!devops/**"
-      - "!*examples*/**"
-      - "!*install*/**"
   workflow_call:
 
 jobs:
