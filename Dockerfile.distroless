@@ -1,4 +1,4 @@
 FROM gcr.io/distroless/base-debian11:debug-nonroot
 WORKDIR /
-COPY blogomatic /
+COPY ./bin/blogomatic /
 ENTRYPOINT ["/blogomatic"]

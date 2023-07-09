@@ -181,7 +181,7 @@ docker-workflow-alpine-multistage:
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 
 docker-build-alpine-cicd:
-	docker build -t blogomatic:alpine-cicd -f Dockerfile.alpine-cicd .
+	docker build -t blogomatic:alpine-cicd -f ./devops/cicd-images/Dockerfile.alpine-cicd ./devops/cicd-images
 
 docker-workflow-using-alpine-cicd: docker-build-alpine-cicd
 	docker run --rm -it -v `pwd`:/tmp/code blogomatic:alpine-cicd bash -c 'cd /tmp/code; make all; chown -R 1000:1000 .'
