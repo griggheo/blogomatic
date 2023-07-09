@@ -4,9 +4,6 @@ kind: Kustomization
 namespace: test
 
 images:
-- name: timoniersystems.com/blogomatic
-  newName: ghcr.io/codepraxis-io/blogomatic
-  newTag: 7560ece0-distroless
 - name: timoniersystems/blogomatic
   newName: ghcr.io/codepraxis-io/blogomatic
   newTag: 5047aea8-distroless
