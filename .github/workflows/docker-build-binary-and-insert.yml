@@ -36,6 +36,7 @@ jobs:
       docker_image_tag_suffix: 'distroless'
       dockerfile_name: 'Dockerfile.distroless'
       dockerfile_scanner: 'semgrep'
+      docker_sbom_generator: 'trivy'
       #stop_on_critical_vulns: 'true'
       verify_base_image_signature: 'false'
     #secrets: inherit
