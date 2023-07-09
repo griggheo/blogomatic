@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-cert-route53
+  namespace: argocd
+spec:
+  secretName: argocd-cert-route53-tls
+  issuerRef:
+    name: letsencrypt-prod-route53
+    kind: ClusterIssuer
+  commonName: 'argocd.codepraxis.dev'
+  dnsNames:
+    - 'argocd.codepraxis.dev'
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  tls:
+  - hosts:
+    - argocd.codepraxis.dev
+    secretName: argocd-cert-route53-tls
+  rules:
+    - host: argocd.codepraxis.dev
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: argocd-server
+              port:
+                number: 80

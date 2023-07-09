@@ -1,0 +1,21 @@
+## NOTE
+
+This has been incorporated in the file install-server-insecure-more-resources.yaml.
+
+All that is needed is:
+kubectl apply -f install-server-insecure-more-resources.yaml -nargocd
+
+### Alternative method:
+
+# retrieve argocd-cmd-params-cm configmap
+kubectl  get cm argocd-cmd-params-cm -n argocd -oyaml > argocd-cmd-params-cm.yaml
+
+# edit argocd-cmd-params-cm.yaml and add section:
+data:
+  server.insecure: "true"
+
+# apply updated configmap
+kubectl apply -f argocd-cmd-params-cm.yaml -n argocd
+
+# restart argocd-server
+kubectl rollout restart deployment/argocd-server -n argocd
