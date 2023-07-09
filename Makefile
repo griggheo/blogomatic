@@ -54,6 +54,7 @@ goreleaser_build_local_container:
 	GORELEASER_CURRENT_TAG=$(GORELEASER_CURRENT_TAG) \
 	DOCKER_CONTEXT=$(shell docker context show) \
 	goreleaser release --clean --snapshot --skip-sign
+	# docker run --rm -p 8080:8080 -e DB_NAME='/data/blogomatic.db' -v `pwd`/data:/data blogomatic:goreleaser
 
 govulncheck:
 	govulncheck ./...
