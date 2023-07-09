@@ -6,8 +6,10 @@ on:
     #   - v*.*.*
     branches:
      - main
-    # paths:
-    #   - "src/**"
+    paths:
+      - "!devops/**"
+      - "!*examples*/**"
+      - "!*install*/**"
   workflow_call:
 
 jobs:
