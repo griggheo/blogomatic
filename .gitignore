@@ -1,6 +1,5 @@
 dist
 bin
-config.yaml
 *.db
 coverage.*
 .scannerwork

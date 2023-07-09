@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blogomatic-test
+  namespace: argocd
+spec:
+  project: blogomatic
+  source:
+    repoURL: 'https://github.com/codepraxis-io/blogomatic'
+    targetRevision: HEAD
+    path: ./devops/kustomize/overlays/test
+  destination:
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated: {}
