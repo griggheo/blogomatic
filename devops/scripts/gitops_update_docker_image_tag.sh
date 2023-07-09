@@ -8,11 +8,8 @@ DOCKER_IMAGE_WITH_REGISTRY=$DESTINATION_REGISTRY/$DOCKER_IMAGE_NAME
 echo "Updating kustomize overlay $KUSTOMIZE_OVERLAY_PATH with tag $IMAGE_TAG for image $DOCKER_IMAGE_WITH_REGISTRY"
 kustomize edit set image $DOCKER_IMAGE_WITH_REGISTRY=$DOCKER_IMAGE_WITH_REGISTRY:$IMAGE_TAG
 
-# git config --global user.email "$GITHUB_USERNAME"
-# git config --global user.name "$GITHUB_USERNAME"
-# echo "${GITHUB_TOKEN}" > "${GITHUB_TOKEN_PATH}"
-# gh auth login --hostname "${GIT_HOSTNAME}" --with-token < "${GITHUB_TOKEN_PATH}" || exit 1
-
+git config --global user.email "$GITHUB_USER"
+git config --global user.name "$GITHUB_EMAIL"
 
 git add kustomization.yaml
 git commit -m "Updating kustomize overlay $KUSTOMIZE_OVERLAY_PATH with tag $IMAGE_TAG for image $DOCKER_IMAGE_WITH_REGISTRY"

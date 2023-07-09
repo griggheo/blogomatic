@@ -143,6 +143,9 @@ jobs:
       COSIGN_PUBLIC_KEY: ${{secrets.cosign_public_key}}
       COSIGN_PASSWORD: ${{secrets.cosign_private_key_password}}
       KUSTOMIZE_OVERLAY_PATH: ${{ inputs.kustomize_overlay_path }}
+      GITHUB_USER: ${{ github.actor }}
+      GITHUB_EMAIL: "${{ github.actor }}@users.noreply.github.com"
+
     steps:
       - name: Mark workspace directory as safe
         run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
