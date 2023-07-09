@@ -2,7 +2,9 @@ package post
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 )
 
@@ -99,6 +101,9 @@ func (ph *PostHandler) EditPost(c echo.Context) error {
 
 func (ph *PostHandler) DeletePost(c echo.Context) error {
 	id := c.Param("id")
+
+    	log.Println("Deleting post with ID:", id)
+	fmt.Printf("Type of id: %T\n", id)
 
 //	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
 //	if err != nil {

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 COSIGN_PUBLIC_KEY=$HOME/.cosign/cosign.pub
-BLOB=ghcr.io/codepraxis-io/blogomatic-debian-bullseye-bin:bb076a5c
+BLOB_TAG=d79b49c3
+BLOB=ghcr.io/codepraxis-io/blogomatic-debian-bullseye-bin:${BLOB_TAG}
 
 cosign verify --key $COSIGN_PUBLIC_KEY "$BLOB"
 

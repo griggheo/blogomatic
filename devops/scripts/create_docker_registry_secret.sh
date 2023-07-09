@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DOCKER_REGISTRY=https://docker.io
+DOCKER_REGISTRY=https://ghcr.io
 DOCKER_USERNAME=$1
 DOCKER_PASSWORD=$2
 NAMESPACE=$3

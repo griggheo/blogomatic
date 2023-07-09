@@ -36,7 +36,7 @@ function App() {
     const confirmed = window.confirm('Are you sure you want to delete this post?');
     if (confirmed) {
       //const response = await fetch('https://' + window.location.hostname + ':443/posts/${postId}', {
-      const response = await fetch('/posts/${postId}', {
+      const response = await fetch(`/posts/${postId}`, {
         method: 'DELETE',
       });
       if (response.ok) {
@@ -56,7 +56,7 @@ function App() {
 
   const updatePost = async () => {
     //const response = await fetch('https://' + window.location.hostname + ':443/posts/${editPostId}', {
-    const response = await fetch('/posts/${editPostId}', {
+    const response = await fetch(`/posts/${editPostId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: newPostTitle, content: newPostContent }),
