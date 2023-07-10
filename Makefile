@@ -31,7 +31,7 @@ fmt:
 	cd post; go fmt; cd -
 	cd db; go fmt; cd -
 
-all: fmt clean app
+all: clean app
 
 
 run: app
