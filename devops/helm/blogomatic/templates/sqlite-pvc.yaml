@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-sqlite-pvc
+  labels:
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.pvc.sqlitePvc.storageRequest | quote }}

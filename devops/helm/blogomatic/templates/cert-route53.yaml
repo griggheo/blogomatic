@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-cert-route53
+  labels:
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  commonName: {{ .Values.ingress.virtualhost.fqdn }}
+  dnsNames:
+  - "{{ .Values.ingress.virtualhost.fqdn }}"
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod-route53
+  secretName: cert-route53-tls

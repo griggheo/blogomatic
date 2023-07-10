@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-blogomatic
+  labels:
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ .Values.ingress.virtualhost.fqdn }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: '{{ include "blogomatic.fullname" . }}-blogomatic'
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - {{ .Values.ingress.virtualhost.fqdn }}
+    secretName: cert-route53-tls

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-mtb9fck787
+  labels:
+  {{- include "blogomatic.labels" . | nindent 4 }}
+data:
+  DB_NAME: {{ .Values.mtb9Fck787.dbName | quote }}
+  DB_TYPE: {{ .Values.mtb9Fck787.dbType | quote }}

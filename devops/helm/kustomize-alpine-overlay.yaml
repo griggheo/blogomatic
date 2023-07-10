@@ -1,0 +1,140 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    db:
+      type: sqlite
+kind: ConfigMap
+metadata:
+  name: blogomatic-config-ckmhth7845
+  namespace: alpine
+---
+apiVersion: v1
+data:
+  DB_NAME: /data/blogomatic.db
+  DB_TYPE: sqlite
+kind: ConfigMap
+metadata:
+  name: blogomatic-mtb9fck787
+  namespace: alpine
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: blogomatic
+  name: blogomatic
+  namespace: alpine
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: blogomatic
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlite-pvc
+  namespace: alpine
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: blogomatic
+  name: blogomatic
+  namespace: alpine
+spec:
+  minReadySeconds: 5
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blogomatic
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: blogomatic
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: blogomatic-mtb9fck787
+        image: timoniersystems/blogomatic:alpine-multistage-42b1609
+        imagePullPolicy: Always
+        name: blogomatic
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: false
+        volumeMounts:
+        - mountPath: /data
+          name: sqlite-volume
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always
+      volumes:
+      - name: sqlite-volume
+        persistentVolumeClaim:
+          claimName: sqlite-pvc
+      - configMap:
+          name: blogomatic-config-ckmhth7845
+        name: blogomatic-config-file
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-cert-route53
+  namespace: alpine
+spec:
+  commonName: '*.codepraxis.dev'
+  dnsNames:
+  - '*.codepraxis.dev'
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod-route53
+  secretName: wildcard-cert-route53-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blogomatic
+  namespace: alpine
+spec:
+  rules:
+  - host: blogomatic-test-alpine.codepraxis.dev
+    http:
+      paths:
+      - backend:
+          service:
+            name: blogomatic
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - blogomatic-test-alpine.codepraxis.dev
+    secretName: wildcard-cert-route53-tls

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-blogomatic
+  labels:
+    app: blogomatic
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.blogomatic.type }}
+  selector:
+    app: blogomatic
+  {{- include "blogomatic.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.blogomatic.ports | toYaml | nindent 2 -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-blogomatic
+  labels:
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  rules:
+  - host: blogomatic-test-alpine-helm.codepraxis.dev
+    http:
+      paths:
+      - backend:
+          service:
+            name: '{{ include "blogomatic.fullname" . }}-blogomatic'
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - blogomatic-test-alpine-helm.codepraxis.dev
+    secretName: wildcard-cert-route53-tls

@@ -3,6 +3,7 @@
 KUBECTL_VERSION=1.27.0
 KUSTOMIZE_VERSION=5.1.0
 HELM_VERSION=3.10.2
+HELMIFY_VERSION=0.4.5
 KUBESEAL_VERSION=0.22.0
 
 # install kubectl
@@ -23,6 +24,12 @@ tar xfz helm-v${HELM_VERSION}-linux-amd64.tar.gz
 sudo mv linux-amd64/helm /usr/local/bin/
 sudo chmod +x /usr/local/bin/helm
 rm -rf helm* linux-amd64
+
+# install helmify
+wget https://github.com/arttor/helmify/releases/download/v${HELMIFY_VERSION}/helmify_Linux_x86_64.tar.gz
+tar xvfz helmify_Linux_x86_64.tar.gz
+rm -rf helmify_Linux_x86_64.tar.gz
+sudo mv helmify /usr/local/bin
 
 # install kubeseal
 mkdir -p kseal; cd kseal

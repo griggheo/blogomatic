@@ -1,0 +1,38 @@
+blogomatic:
+  blogomatic:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: false
+    image:
+      repository: timoniersystems/blogomatic
+      tag: alpine-multistage-42b1609
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  replicas: 1
+  type: ClusterIP
+configCkmhth7845:
+  configYaml: |-
+    db:
+      type: sqlite
+kubernetesClusterDomain: cluster.local
+mtb9Fck787:
+  dbName: /data/blogomatic.db
+  dbType: sqlite
+pvc:
+  sqlitePvc:
+    storageRequest: 1Gi
+ingress:
+  virtualhost:
+    fqdn: blogomatic-test-alpine-helm.codepraxis.dev
+

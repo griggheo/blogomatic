@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blogomatic.fullname" . }}-blogomatic
+  labels:
+    app: blogomatic
+  {{- include "blogomatic.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.blogomatic.type }}
+  selector:
+    app: blogomatic
+  {{- include "blogomatic.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.blogomatic.ports | toYaml | nindent 2 -}}
