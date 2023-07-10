@@ -1,0 +1,33 @@
+annotations:
+  artifacthub.io/changes: |
+    - kind: fixed
+      description: incorrect config map names
+    - kind: added
+      description: define resources for cleanupJobs
+    - kind: changed
+      description: change to enable webhook cleanup hook by default
+  artifacthub.io/links: |
+    - name: Documentation
+      url: https://kyverno.io/docs
+  artifacthub.io/operator: "false"
+  artifacthub.io/prerelease: "false"
+apiVersion: v2
+appVersion: v1.10.1
+description: Kubernetes Native Policy Management
+home: https://kyverno.io/
+icon: https://github.com/kyverno/kyverno/raw/main/img/logo.png
+keywords:
+- kubernetes
+- nirmata
+- policy agent
+- validating webhook
+- admissions controller
+kubeVersion: '>=1.16.0-0'
+maintainers:
+- name: Nirmata
+  url: https://kyverno.io/
+name: kyverno
+sources:
+- https://github.com/kyverno/kyverno
+type: application
+version: 3.0.2
