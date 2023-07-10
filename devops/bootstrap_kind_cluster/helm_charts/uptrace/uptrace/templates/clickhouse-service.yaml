@@ -1,0 +1,23 @@
+{{ if .Values.clickhouse.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: uptrace-clickhouse
+  labels:
+    app: clickhouse
+    {{- include "uptrace.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 8123
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 9000
+      targetPort: tcp
+      protocol: TCP
+      name: tcp
+  selector:
+    app: clickhouse
+    {{- include "uptrace.selectorLabels" . | nindent 4 }}
+{{ end }}

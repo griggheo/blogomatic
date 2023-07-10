@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: uptrace-cert-route53
+  namespace: uptrace
+spec:
+  secretName: uptrace-cert-route53-tls
+  issuerRef:
+    name: letsencrypt-prod-route53
+    kind: ClusterIssuer
+  commonName: 'uptrace.codepraxis.dev'
+  dnsNames:
+    - 'uptrace.codepraxis.dev'
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uptrace-with-tls
+  namespace: uptrace
+spec:
+  tls:
+  - hosts:
+    - uptrace.codepraxis.dev
+    secretName: uptrace-cert-route53-tls
+  rules:
+    - host: uptrace.codepraxis.dev
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: uptrace
+              port:
+                number: 14318

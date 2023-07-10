@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: signoz-cert-route53
+  namespace: signoz
+spec:
+  secretName: signoz-cert-route53-tls
+  issuerRef:
+    name: letsencrypt-prod-route53
+    kind: ClusterIssuer
+  commonName: 'signoz.codepraxis.dev'
+  dnsNames:
+    - 'signoz.codepraxis.dev'
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: signoz
+  namespace: signoz
+spec:
+  tls:
+  - hosts:
+    - signoz.codepraxis.dev
+    secretName: signoz-cert-route53-tls
+  rules:
+    - host: signoz.codepraxis.dev
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: signoz-frontend
+              port:
+                number: 3301

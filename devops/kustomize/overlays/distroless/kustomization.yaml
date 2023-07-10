@@ -6,7 +6,7 @@ namespace: distroless
 images:
 - name: timoniersystems/blogomatic
   newName: timoniersystems/blogomatic
-  newTag: distroless-multistage-126d300
+  newTag: distroless-multistage-8f85d6c
 
 configMapGenerator:
 - behavior: replace

@@ -8,3 +8,5 @@ data:
   DB_PORT: "5432"
   DB_USER: blogomatic
   DB_NAME: blogomatic
+  UPTRACE_DSN: http://project2_secret_token@uptrace.uptrace:14317/2
+  OTEL_SERVICE_NAME: blogomatic

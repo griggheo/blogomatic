@@ -169,24 +169,24 @@ hadolint:
 
 docker-workflow-distroless-multistage:
 	# assumes we already ran `docker login`
-	docker build -t blogomatic:distroless-multistage-${COMMIT_SHORT} -f Dockerfile.distroless-multistage .
+	docker buildx build -t blogomatic:distroless-multistage-${COMMIT_SHORT} -f Dockerfile.distroless-multistage .
 	docker tag blogomatic:distroless-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 
 docker-workflow-alpine-multistage:
 	# assumes we already ran `docker login`
-	docker build -t blogomatic:alpine-multistage-${COMMIT_SHORT} -f Dockerfile.alpine-multistage .
+	docker buildx build -t blogomatic:alpine-multistage-${COMMIT_SHORT} -f Dockerfile.alpine-multistage .
 	docker tag blogomatic:alpine-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 
 docker-build-alpine-cicd:
-	docker build -t blogomatic:alpine-cicd -f ./devops/cicd-images/Dockerfile.alpine-cicd ./devops/cicd-images
+	docker buildx build -t blogomatic:alpine-cicd -f ./devops/cicd-images/Dockerfile.alpine-cicd ./devops/cicd-images
 
 docker-workflow-using-alpine-cicd: docker-build-alpine-cicd
 	docker run --rm -it -v `pwd`:/tmp/code blogomatic:alpine-cicd bash -c 'cd /tmp/code; make all; chown -R 1000:1000 .'
-	docker build -t blogomatic:alpine-${COMMIT_SHORT} -f Dockerfile.alpine-insert-binary .
+	docker buildx build -t blogomatic:alpine-${COMMIT_SHORT} -f Dockerfile.alpine-insert-binary .
 	docker tag blogomatic:alpine-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
