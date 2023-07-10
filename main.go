@@ -13,9 +13,32 @@ import (
 	"log"
 	"os"
 	"path"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
-//func loadConfig() {
+var tracer = otel.Tracer("blogomatic-echo-server")
+
+func initTracer() (*sdktrace.TracerProvider, error) {
+	exporter, err := stdout.New(stdout.WithPrettyPrint())
+	if err != nil {
+		return nil, err
+	}
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithBatcher(exporter),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	return tp, nil
+}
+
 func loadConfig(reader io.Reader) error {
 	// Set default values for the configuration variables
 	viper.SetDefault("db.type", "sqlite")
@@ -64,6 +87,17 @@ func loadConfig(reader io.Reader) error {
 //go:embed web/blog/build/*
 var distFS embed.FS
 func main() {
+
+	tp, err := initTracer()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
+
     //loadConfig()
 
 	file, err := os.Open("config.yaml")
@@ -105,6 +139,7 @@ func main() {
 
     e := echo.New()
     e.Use(middleware.Logger())
+	e.Use(otelecho.Middleware("blogomatic"))
 
     postHandler := post.NewPostHandler(db)
 
