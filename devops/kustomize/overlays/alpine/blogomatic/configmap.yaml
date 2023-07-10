@@ -3,8 +3,5 @@ kind: ConfigMap
 metadata:
   name: blogomatic
 data:
-  DB_TYPE: postgres
-  DB_HOST: postgres-codepraxis-primary.postgres-operator.svc
-  DB_PORT: "5432"
-  DB_USER: blogomatic
-  DB_NAME: blogomatic
+  DB_TYPE: sqlite
+  DB_NAME: /data/blogomatic.db

@@ -6,7 +6,7 @@ namespace: alpine
 images:
 - name: timoniersystems/blogomatic
   newName: timoniersystems/blogomatic
-  newTag: alpine-multistage-2f07e41
+  newTag: alpine-multistage-42b1609
 
 configMapGenerator:
 - behavior: replace
@@ -16,7 +16,7 @@ configMapGenerator:
 
 resources:
 - ./blogomatic/ingress.yaml
-- ./blogomatic/sealed-secret.yaml
+- ./blogomatic/pvc.yaml
 - ../../base/
 
 patches:
@@ -27,3 +27,9 @@ patches:
     kind: Deployment
     name: blogomatic
   path: blogomatic/deployment-patch.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: blogomatic
+  path: blogomatic/deployment-patch-remove-secret.yaml
