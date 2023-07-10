@@ -2,8 +2,8 @@ package db
 
 import (
 	//"database/sql"
-	"time"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -25,4 +25,3 @@ func TestInitializeSqliteDB(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "posts", tableName)
 }
-

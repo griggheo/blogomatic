@@ -32,9 +32,8 @@ func TestCreatePost(t *testing.T) {
 
 	// Set up the expected SQL mock behavior
 	mock.ExpectExec(`INSERT INTO posts(title, content) VALUES($1, $2) RETURNING id`).
-	WithArgs("Test Title", "Test Content").
-	WillReturnResult(sqlmock.NewResult(1, 1))
-
+		WithArgs("Test Title", "Test Content").
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Call the CreatePost method
 	err = ph.CreatePost(c)

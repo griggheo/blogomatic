@@ -3,11 +3,11 @@ package main
 import (
 	// "io/ioutil"
 	//"io"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfigFileExists(t *testing.T) {

@@ -26,7 +26,13 @@ clean:
 	rm -rf bin
 	cd web/blog && rm -rf build node_modules
 
-all: clean app
+fmt: 
+	go fmt
+	cd post; go fmt; cd -
+	cd db; go fmt; cd -
+
+all: fmt clean app
+
 
 run: app
 	./bin/blogomatic

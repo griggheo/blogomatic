@@ -81,14 +81,14 @@ func (ph *PostHandler) EditPost(c echo.Context) error {
 		return err
 	}
 
-//	stmt, err := ph.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
-//	if err != nil {
-//		return err
-//	}
+	//	stmt, err := ph.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
+	//	if err != nil {
+	//		return err
+	//	}
 
 	stmt, err := ph.db.Prepare("UPDATE posts SET title = $1, content = $2 WHERE id = $3")
 	if err != nil {
-	    return err
+		return err
 	}
 
 	_, err = stmt.Exec(post.Title, post.Content, id)
@@ -102,17 +102,17 @@ func (ph *PostHandler) EditPost(c echo.Context) error {
 func (ph *PostHandler) DeletePost(c echo.Context) error {
 	id := c.Param("id")
 
-    	log.Println("Deleting post with ID:", id)
+	log.Println("Deleting post with ID:", id)
 	fmt.Printf("Type of id: %T\n", id)
 
-//	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
-//	if err != nil {
-//		return err
-//	}
+	//	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = ?")
+	//	if err != nil {
+	//		return err
+	//	}
 
 	stmt, err := ph.db.Prepare("DELETE FROM posts WHERE id = $1")
 	if err != nil {
-	    return err
+		return err
 	}
 
 	_, err = stmt.Exec(id)
