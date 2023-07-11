@@ -190,7 +190,7 @@ docker-workflow-alpine-multistage:
 	docker buildx build -t blogomatic:alpine-multistage-${COMMIT_SHORT} -f Dockerfile.alpine-multistage .
 	docker tag blogomatic:alpine-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
-	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
+	#echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	trivy image --format cyclonedx timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT} -o sboms/trivy-docker-alpine-multistage-sbom-cyclonedx.json
 
 docker-build-alpine-cicd:

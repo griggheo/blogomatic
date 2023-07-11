@@ -6,7 +6,7 @@ namespace: alpine
 images:
 - name: timoniersystems/blogomatic
   newName: timoniersystems/blogomatic
-  newTag: alpine-multistage-42b1609
+  newTag: alpine-multistage-2fd73ff
 
 configMapGenerator:
 - behavior: replace

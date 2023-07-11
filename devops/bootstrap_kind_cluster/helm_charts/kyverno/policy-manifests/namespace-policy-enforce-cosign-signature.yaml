@@ -1,0 +1,26 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: verify-cosign-signature
+  namespace: alpine
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: verify-image
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      verifyImages:
+      - imageReferences:
+        - "*blogomatic*"
+        mutateDigest: True
+        attestors:
+        - count: 1
+          entries:
+          - keys:
+              secret:
+                name: cosign-pub-key
+                namespace: alpine
