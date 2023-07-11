@@ -4,6 +4,7 @@ COMMIT_SHORT=$(shell git rev-parse --short HEAD)
 BUILD=$(shell date +%FT%T%z)
 
 CONTAINER ?= docker
+DOCKERFILE ?= Dockerfile.distroless
 CPUTYPE=$(shell uname -m | sed 's/x86_64/amd64/')
 GITHUB_REPOSITORY ?= codepraxis-io/blogomatic
 LOCAL_IMAGE_NAME ?= blogomatic-local
@@ -115,6 +116,8 @@ sbom-syft-spdx:
 
 sbom-syft: sbom-syft-json sbom-syft-cyclonedx sbom-syft-spdx
 
+code-sbom-cyclonedx: go-mod-sbom-cyclonedx npm-sbom-cyclonedx
+
 cyclonedx-merge-code-sboms-and-scan: go-mod-sbom-cyclonedx npm-sbom-cyclonedx
 	mkdir -p scan-results/trivy
 	cyclonedx merge --input-files sboms/go-mod-sbom-cyclonedx.json sboms/npm-sbom-cyclonedx.json  --output-file sboms/code-cyclonedx.json
@@ -174,11 +177,13 @@ hadolint:
 	hadolint ${DOCKERFILE}
 
 docker-workflow-distroless-multistage:
+	mkdir -p sboms
 	# assumes we already ran `docker login`
 	docker buildx build -t blogomatic:distroless-multistage-${COMMIT_SHORT} -f Dockerfile.distroless-multistage .
 	docker tag blogomatic:distroless-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT}
+	trivy image --format cyclonedx timoniersystems/blogomatic:distroless-multistage-${COMMIT_SHORT} -o sboms/trivy-docker-distroless-multistage-sbom-cyclonedx.json
 
 docker-workflow-alpine-multistage:
 	# assumes we already ran `docker login`
@@ -186,6 +191,7 @@ docker-workflow-alpine-multistage:
 	docker tag blogomatic:alpine-multistage-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT}
+	trivy image --format cyclonedx timoniersystems/blogomatic:alpine-multistage-${COMMIT_SHORT} -o sboms/trivy-docker-alpine-multistage-sbom-cyclonedx.json
 
 docker-build-alpine-cicd:
 	docker buildx build -t blogomatic:alpine-cicd -f ./devops/cicd-images/Dockerfile.alpine-cicd ./devops/cicd-images
@@ -196,4 +202,18 @@ docker-workflow-using-alpine-cicd: docker-build-alpine-cicd
 	docker tag blogomatic:alpine-${COMMIT_SHORT} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
+	trivy image --format cyclonedx timoniersystems/blogomatic:alpine-${COMMIT_SHORT} -o sboms/trivy-docker-alpine-sbom-cyclonedx.json
 
+full-workflow-local: DOCKERFILE=Dockerfile.local
+full-workflow-local: REGISTRY=timoniersystems
+full-workflow-local: IMAGE_NAME=blogomatic:local
+#full-workflow-local: all govulncheck semgrep owasp-depcheck sonarqube code-sbom-cyclonedx hadolint
+full-workflow-local: hadolint
+	docker buildx build -t ${IMAGE_NAME}-${COMMIT_SHORT} -f ${DOCKERFILE} .
+	docker tag ${IMAGE_NAME}-${COMMIT_SHORT} ${REGISTRY}/${IMAGE_NAME}-${COMMIT_SHORT}
+	docker push ${REGISTRY}/${IMAGE_NAME}-${COMMIT_SHORT}
+	trivy image ${REGISTRY}/${IMAGE_NAME}-${COMMIT_SHORT} --format cyclonedx -o sboms/trivy-docker-local-sbom-cyclonedx.json
+	syft packages blogomatic:local-1b5f36c -o cyclonedx-json  > sboms/syft-docker-local-sbom-cyclonedx.json
+	cyclonedx merge --input-files sboms/go-mod-sbom-cyclonedx.json sboms/npm-sbom-cyclonedx.json sboms/syft-docker-local-sbom-cyclonedx.json --output-file sboms/all-cyclonedx.json
+	trivy sbom sboms/all-cyclonedx.json
+	trivy sbom sboms/trivy-docker-local-sbom-cyclonedx.json

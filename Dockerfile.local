@@ -1,0 +1,4 @@
+FROM ubuntu:22.04
+WORKDIR /
+COPY ./bin/blogomatic /
+ENTRYPOINT ["/blogomatic"]
