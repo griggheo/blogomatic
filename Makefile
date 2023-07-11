@@ -211,6 +211,9 @@ docker-workflow-paketo:
 	trivy image --format cyclonedx timoniersystems/blogomatic:paketo-${COMMIT_SHORT} -o sboms/trivy-docker-paketo-sbom-cyclonedx.json
 	trivy sbom sboms/trivy-docker-paketo-sbom-cyclonedx.json
 
+docker-workflow-ko:
+	KO_DOCKER_REPO=timoniersystems ko build .
+
 full-workflow-local: DOCKERFILE=Dockerfile.local
 full-workflow-local: REGISTRY=timoniersystems
 full-workflow-local: IMAGE_NAME=blogomatic:local
