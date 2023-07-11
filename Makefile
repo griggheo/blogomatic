@@ -204,6 +204,13 @@ docker-workflow-using-alpine-cicd: docker-build-alpine-cicd
 	echo 'y' | COSIGN_PASSWORD=$(shell cat ~/.k) cosign sign --key ${COSIGN_PRIVATE_KEY} timoniersystems/blogomatic:alpine-${COMMIT_SHORT}
 	trivy image --format cyclonedx timoniersystems/blogomatic:alpine-${COMMIT_SHORT} -o sboms/trivy-docker-alpine-sbom-cyclonedx.json
 
+docker-workflow-paketo:
+	pack build blogomatic-paketo --buildpack paketo-buildpacks/go --builder paketobuildpacks/builder-jammy-base
+	docker tag blogomatic-paketo timoniersystems/blogomatic:paketo-${COMMIT_SHORT}
+	docker push timoniersystems/blogomatic:paketo-${COMMIT_SHORT}
+	trivy image --format cyclonedx timoniersystems/blogomatic:paketo-${COMMIT_SHORT} -o sboms/trivy-docker-paketo-sbom-cyclonedx.json
+	trivy sbom sboms/trivy-docker-paketo-sbom-cyclonedx.json
+
 full-workflow-local: DOCKERFILE=Dockerfile.local
 full-workflow-local: REGISTRY=timoniersystems
 full-workflow-local: IMAGE_NAME=blogomatic:local

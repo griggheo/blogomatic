@@ -5,6 +5,7 @@ KUSTOMIZE_VERSION=5.1.0
 HELM_VERSION=3.10.2
 HELMIFY_VERSION=0.4.5
 KUBESEAL_VERSION=0.22.0
+PACK_VERSION=0.29.0
 
 # install kubectl
 curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /tmp/kubectl
@@ -37,6 +38,12 @@ wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEA
 tar xfz kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz
 sudo mv kubeseal /usr/local/bin/
 cd ..; rm -rf kseal
+
+# install paketo pack
+wget https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
+tar xvfz pack-v${PACK_VERSION}-linux.tgz
+rm -rf pack-v${PACK_VERSION}-linux.tgz
+sudo mv pack /usr/local/bin
 
 # install jq
 sudo apt -y install jq
