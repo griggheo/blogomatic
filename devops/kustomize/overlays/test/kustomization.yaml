@@ -6,7 +6,7 @@ namespace: test
 images:
 - name: timoniersystems/blogomatic
   newName: ghcr.io/codepraxis-io/blogomatic
-  newTag: bf3fa753-distroless
+  newTag: bb186ba3-distroless
 
 configMapGenerator:
 - behavior: replace
