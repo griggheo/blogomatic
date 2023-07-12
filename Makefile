@@ -208,6 +208,7 @@ docker-workflow-paketo:
 	pack build blogomatic-paketo --buildpack paketo-buildpacks/go --builder paketobuildpacks/builder-jammy-base
 	docker tag blogomatic-paketo timoniersystems/blogomatic:paketo-${COMMIT_SHORT}
 	docker push timoniersystems/blogomatic:paketo-${COMMIT_SHORT}
+	pack sbom download timoniersystems/blogomatic:paketo-${COMMIT_SHORT} --output-dir /tmp/paketo-${COMMIT_SHORT}
 	trivy image --format cyclonedx timoniersystems/blogomatic:paketo-${COMMIT_SHORT} -o sboms/trivy-docker-paketo-sbom-cyclonedx.json
 	trivy sbom sboms/trivy-docker-paketo-sbom-cyclonedx.json
 
